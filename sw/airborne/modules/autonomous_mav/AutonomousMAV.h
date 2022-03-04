@@ -11,7 +11,15 @@
  */
 
 #include "navigator/Navigator.h"
+#include <chrono>
 #include "obstacle_detector/ObstacleDetector.h"
+#include "firmwares/rotorcraft/navigation.h"
+#include "generated/airframe.h"
+#include "state.h"
+#include "subsystems/abi.h"
+#include <time.h>
+#include <stdio.h>
+
 
 #ifndef AUTONOMOUS_MAV_H
 #define AUTONOMOUS_MAV_H
@@ -46,6 +54,11 @@ private:
      * The obstacle detection unit that the aircraft relies on
      */
     ObstacleDetector * detector;
+
+    /**
+     * Time when the system started operating
+     */
+    std::chrono::steady_clock::time_point operationStarted;
 
 public:
 

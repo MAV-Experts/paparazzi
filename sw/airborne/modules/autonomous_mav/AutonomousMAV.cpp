@@ -19,14 +19,8 @@
 
 #include "modules/autonomous_mav/AutonomousMAV.h"
 #include "AutonomousMAV.h"
-#include "firmwares/rotorcraft/navigation.h"
-#include "generated/airframe.h"
-#include "state.h"
-#include "subsystems/abi.h"
-#include <time.h>
-#include <stdio.h>
 
-// needed to get the nav functions like Inside...
+// TODO: why so ugly!? BAD STYLEE!!
 #define NAV_C
 #include "generated/flight_plan.h"
 
@@ -67,68 +61,71 @@ void AutonomousMav::AutonomousFlyer(){
 */
 void AutonomousMav::heartbeat(){
 
-    // Temporarily define action variables that are later replaced by module activity
-    bool timerIsDone = false;
+    // Compute the time difference between start and now to get when 10 minutes are done
+    std::chrono::steady_clock::time_point currentTime = std::chrono::steady_clock::now();
+    int elapsedMinutes = std::chrono::duration_cast<std::chrono::minutes>(currentTime - this->operationStarted).count();
+    bool timerIsDone = elapsedMinutes > 10;
 
     // Create local variable for the next state (to catch transitions)
     STATE nextState = this->currentState;
 
     // Handle state based actions and transitions
     switch (this->currentState){
-        case STARTUP:
 
+        case STARTUP:
             // Initialize the navigation unit
             this->navigationUnit->start();
             // Initialize the obstacle detector
             this->detector->init();
 
             // Check for transitions
-            if(this->aircraftHasError()){
+            if(this->aircraftHasError())
                 nextState = FATAL_ERROR;
-            }
+
             // After performing startup operations, directly transition to takeoff state
             nextState = TAKEOFF;
             break;
 
         case FATAL_ERROR:
             // State based action in fatal error
-            this->navigationUnit->land();
-            this->navigationUnit->stop();
             break;
 
         case TAKEOFF:
             // State based action in takeoff
-            if(this->aircraftHasError()){
+            if(this->aircraftHasError())
                 nextState = FATAL_ERROR;
-            }
-            if(takeoffSuccessful){
+            if(this->navigationUnit->getState() != NAV_NORMAL)
                 nextState = NORMAL_MOVEMENT;
-            }
             break;
+
         case LANDING:
             // State based action in landing
             break;
+
         case NORMAL_MOVEMENT:
+            // Compute route
+            this->navigationUnit->computePath(this->detector->getObstacleMap(), this->detector->getDistanceMap());
             // State based action in normal movement
-            if(this->aircraftHasError() || timerIsDone){
+            if(this->aircraftHasError() || timerIsDone)
                 nextState = LANDING;
-            }
-            if(this->detector->obstacleAhead()){
+            if(this->detector->obstacleAhead())
                 nextState = EVASIVE_ACTION;
-            }
             break;
+
         case EVASIVE_ACTION:
+            // Compute route
+            this->navigationUnit->computePath(this->detector->getObstacleMap(), this->detector->getDistanceMap());
             // State based action in evasive action
-            if(this->aircraftHasError() || timerIsDone){
+            if(this->aircraftHasError() || timerIsDone)
                 nextState = LANDING;
-            }
-            if(!this->detector->obstacleAhead()){
+            if(!this->detector->obstacleAhead() && (!this->aircraftHasError()))
                 nextState = NORMAL_MOVEMENT;
-            }
             break;
+
         case DONE:
             // State based action in done
             break;
+
         default:
             // If for any reason one ends up here, go to fatal error
             nextState = FATAL_ERROR;
@@ -138,19 +135,24 @@ void AutonomousMav::heartbeat(){
     // Handle transition based actions and entry actions
     if(this->currentState != nextState){
         switch (currentState){
+
             case STARTUP:
-                // Entry actions for state STARTUP
+                // Check for transition based actions
                 if(nextState == FATAL_ERROR){
                     // Transition based actions from startup to fatal error
                 }
                 if(nextState == TAKEOFF){
-                    // TODO: start the timer
+                    // Start the timer
+                    this->operationStarted = std::chrono::steady_clock::now();
                 }
                 break;
+
             case FATAL_ERROR:
                 // Entry actions for state FATAL_ERROR
                 this->navigationUnit->land();
+                this->navigationUnit->stop();
                 break;
+
             case TAKEOFF:
                 // Entry actions for state TAKEOFF
                 this->navigationUnit->takeoff();
@@ -159,6 +161,7 @@ void AutonomousMav::heartbeat(){
                     // Transition based actions from takeoff to normal movement
                 }
                 break;
+
             case LANDING:
                 // Entry actions for state LANDING
                 this->navigationUnit->land();
@@ -170,6 +173,7 @@ void AutonomousMav::heartbeat(){
                     // Transition based actions from landing to done
                 }
                 break;
+
             case NORMAL_MOVEMENT:
                 // Entry actions for state NORMAL_MOVEMENT
                 if(nextState == EVASIVE_ACTION){
@@ -179,6 +183,7 @@ void AutonomousMav::heartbeat(){
                     // Transition based actions from normal movement to landing
                 }
                 break;
+
             case EVASIVE_ACTION:
                 // Entry actions for state EVASIVE_ACTION
                 if(nextState == NORMAL_MOVEMENT){
@@ -186,10 +191,12 @@ void AutonomousMav::heartbeat(){
                 }
 
                 break;
+
             default:
                 // If for any reason one ends up here, go to fatal error
                 nextState = FATAL_ERROR;
                 break;
+
         }
 
         // Update the state of the MAV
@@ -210,10 +217,11 @@ bool AutonomousMav::aircraftHasError(){
 
     // TODO: do some internal checking
 
-    // Check whether navigator is doing okay
+    // Check whether navigator has outch
     if(this->navigationUnit.hasError())
         hasError = true;
 
+    // Check whether obstacle detection module has outch
     if(this->detector.hasError())
         hasError = true;
 
