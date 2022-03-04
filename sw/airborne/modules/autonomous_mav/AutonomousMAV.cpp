@@ -14,6 +14,7 @@
  * TODO:
  *  - Data exchange via ABI messages between the modules
  *  - Do we need a datalink or event function? Data exchange?
+ *  - Consider using a set of detectors (maybe for different things?)
  */
 
 #include "modules/autonomous_mav/AutonomousMAV.h"
@@ -49,8 +50,16 @@
  * Constructor method of the Autonomous MAV
 */
 void AutonomousMav::AutonomousFlyer(){
+
     // Set the initial state to startup
     this->currentState = STARTUP;
+
+    // TODO: replace with implementation of navigator
+    this->navigationUnit = new Navigator();
+
+    // TODO: replace with implementation of obstacle detector
+    this->detector = new ObstacleDetector();
+
 }
 
 /**
@@ -60,20 +69,17 @@ void AutonomousMav::heartbeat(){
 
     // Temporarily define action variables that are later replaced by module activity
     bool startupOkay = false;
-    bool hasError = false;
     bool takeoffSuccessful = false;
     bool timerIsDone = false;
-    bool obstacleAhead = false;
-    bool freeOfObstacles = false;
 
     // Create local variable for the next state (to catch transitions)
-    navigation_state_t nextState = this->currentState;
+    STATE nextState = this->currentState;
 
     // Handle state based actions and transitions
     switch (this->currentState){
         case STARTUP:
             // State based action in startup
-            if(hasError){
+            if(this->aircraftHasError()){
                 nextState = FATAL_ERROR;
             }
             if(startupOkay){
@@ -85,7 +91,7 @@ void AutonomousMav::heartbeat(){
             break;
         case TAKEOFF:
             // State based action in takeoff
-            if(hasError){
+            if(this->aircraftHasError()){
                 nextState = FATAL_ERROR;
             }
             if(takeoffSuccessful){
@@ -97,19 +103,19 @@ void AutonomousMav::heartbeat(){
             break;
         case NORMAL_MOVEMENT:
             // State based action in normal movement
-            if(hasError || timerIsDone){
+            if(this->aircraftHasError() || timerIsDone){
                 nextState = LANDING;
             }
-            if(obstacleAhead){
+            if(this->detector->obstacleAhead()){
                 nextState = EVASIVE_ACTION;
             }
             break;
         case EVASIVE_ACTION:
             // State based action in evasive action
-            if(hasError || timerIsDone){
+            if(this->aircraftHasError() || timerIsDone){
                 nextState = LANDING;
             }
-            if(freeOfObstacles){
+            if(!this->detector->obstacleAhead()){
                 nextState = NORMAL_MOVEMENT;
             }
             break;
@@ -177,5 +183,28 @@ void AutonomousMav::heartbeat(){
         // Update the state of the MAV
         this->currentState = nextState;
     }
+
+}
+
+/**
+ * Method returns whether the aircraft is experiencing an error
+ *
+ * @return MAV experiencing an error
+ */
+bool AutonomousMav::aircraftHasError(){
+
+    // Initiate the error variable with false
+    bool hasError = false;
+
+    // TODO: do some internal checking
+
+    // Check whether navigator is doing okay
+    if(this->navigationUnit.hasError())
+        hasError = true;
+
+    if(this->detector.hasError())
+        hasError = true;
+
+    return hasError;
 
 }

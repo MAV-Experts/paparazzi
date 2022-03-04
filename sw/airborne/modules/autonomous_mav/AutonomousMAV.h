@@ -10,11 +10,14 @@
  * This module represents the brain of a MAV that flies fully autonomous through
  */
 
+#include "navigator/Navigator.h"
+#include "obstacle_detector/ObstacleDetector.h"
+
 #ifndef AUTONOMOUS_MAV_H
 #define AUTONOMOUS_MAV_H
 
 // Define the num with the possible states
-enum mav_state_t {
+enum STATE {
     STARTUP,
     FATAL_ERROR,
     TAKEOFF,
@@ -32,9 +35,20 @@ private:
     /**
      * Attribute stores the current state of the vehicle
      */
-    navigation_state_t currentState;
+    STATE currentState;
+
+    /**
+     * The navigation unit that does the path planning
+     */
+    Navigator * navigationUnit;
+
+    /**
+     * The obstacle detection unit that the aircraft relies on
+     */
+    ObstacleDetector * detector;
 
 public:
+
     /**
      * Constructor method of the Autonomous MAV
      */
@@ -44,6 +58,13 @@ public:
      * Heartbeat method that is periodically called to run state machine
      */
     void heartbeat();
+
+    /**
+     * Method returns whether the aircraft is experiencing an error
+     *
+     * @return MAV experiencing an error
+     */
+    bool aircraftHasError();
 
 }
 
