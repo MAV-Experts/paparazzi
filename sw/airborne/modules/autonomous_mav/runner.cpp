@@ -7,23 +7,25 @@
  * @file "modules/autonomous_mav/runner.cpp"
  * @author Group 10
  *
- * This is the core of the greatest autonomous flight module every created in paparazzi. The architecture is built in
- * a finite state machine, that has two inflight states "Normal Movement" and "Evasive Maneuver" in which two main
- * modules are working: Navigator and ObstacleDetector.
+ * This is runner that "hosts" an object of type AutonomousMAV and passes the heartbeat with a fixed period.
+ *
+ * TODO:
+ *  - We could subscribe to ABI messaging service here and pass information to MAV object
  *
  */
 
 #include "runner.h"
+#include "AutonomousMAV.h"
 
-// Create an instance of the autonomous mav
-AutonomousFlyer mav;
+// Create an instance of the autonomous mav (global)
+AutonomousMav * mav;
 
 /**
  * Function that is called once for initialization
  */
 void runner_init(void){
     // Create an instance for the MAV
-    mav = AutonomousFlyer();
+    mav = new AutonomousMav();
 }
 
 /**
@@ -31,7 +33,7 @@ void runner_init(void){
  */
 void runner_periodic(void){
     // Pass heartbeat to the system
-    mav.heartbeat();
+    mav->heartbeat();
     // Return for finishing routine
     return;
 }
