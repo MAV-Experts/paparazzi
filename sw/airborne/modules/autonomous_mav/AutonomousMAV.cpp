@@ -4,7 +4,7 @@
  * TU Delft, 04. Mar 2022
  */
 /**
- * @file "modules/autonomous_flyer/autonomous_flyer.c"
+ * @file "modules/autonomous_mav/AutonomousMAV.cpp"
  * @author Group 10
  *
  * This is the core of the greatest autonomous flight module every created in paparazzi. The architecture is built in
@@ -12,14 +12,12 @@
  * modules are working: Navigator and ObstacleDetector.
  *
  * TODO:
- *  - How do we proceed with C++/C only modules? Is paparazzi able to compile C++?
- *  - Need to organize the software differently in paparazzi modules
- *  - Data exchange via ABI messages
- *  - Do we need a datalink or event function? Data exchange? Need to rethink architecture
- *
+ *  - Data exchange via ABI messages between the modules
+ *  - Do we need a datalink or event function? Data exchange?
  */
 
-#include "modules/autonomous_flyer/autonomous_flyer.h"
+#include "modules/autonomous_mav/AutonomousMAV.h"
+#include "AutonomousMAV.h"
 #include "firmwares/rotorcraft/navigation.h"
 #include "generated/airframe.h"
 #include "state.h"
@@ -31,49 +29,34 @@
 #define NAV_C
 #include "generated/flight_plan.h"
 
-#define AUTONOMOUS_FLYER_VERBOSE TRUE
+#define AUTONOMOUS_MAV_VERBOSE TRUE
 
-#define PRINT(string,...) fprintf(stderr, "[autonomous_flyer->%s()] " string,__FUNCTION__ , ##__VA_ARGS__)
-#if AUTONOMOUS_FLYER_VERBOSE
+#define PRINT(string,...) fprintf(stderr, "[autonomous_mav->%s()] " string,__FUNCTION__ , ##__VA_ARGS__)
+#if AUTONOMOUS_MAV_VERBOSE
 #define VERBOSE_PRINT PRINT
 #else
 #define VERBOSE_PRINT(...)
 #endif
 
-enum mav_state_t {
-    STARTUP,
-    FATAL_ERROR,
-    TAKEOFF,
-    LANDING,
-    NORMAL_MOVEMENT,
-    EVASIVE_ACTION,
-    DONE
-};
-
-// define and initialise global variables
-enum navigation_state_t currentState = STARTUP;
-
 /*
  * Define ABI messaging event: TODO: define structure / type of events
  */
-#ifndef AUTONOMOUS_FLYER_VISUAL_DETECTION_ID
-#define AUTONOMOUS_FLYER_VISUAL_DETECTION_ID ABI_BROADCAST
+#ifndef AUTONOMOUS_MAV_VISUAL_DETECTION_ID
+#define AUTONOMOUS_MAV_VISUAL_DETECTION_ID ABI_BROADCAST
 #endif
 
-
 /**
- * Function that is called once for initialization
- */
-void autonomous_flyer_init(void){
-
-    // TODO: Perform initialization actions (before state machine starts)
-
+ * Constructor method of the Autonomous MAV
+*/
+void AutonomousMav::AutonomousFlyer(){
+    // Set the initial state to startup
+    this->currentState = STARTUP;
 }
 
 /**
- * Function that is called periodically (for FSM logic)
- */
-void autonomous_flyer_periodic(void){
+ * Heartbeat method that is periodically called to run state machine
+*/
+void AutonomousMav::heartbeat(){
 
     // Temporarily define action variables that are later replaced by module activity
     bool startupOkay = false;
@@ -84,10 +67,10 @@ void autonomous_flyer_periodic(void){
     bool freeOfObstacles = false;
 
     // Create local variable for the next state (to catch transitions)
-    navigation_state_t nextState = currentState;
+    navigation_state_t nextState = this->currentState;
 
     // Handle state based actions and transitions
-    switch (currentState){
+    switch (this->currentState){
         case STARTUP:
             // State based action in startup
             if(hasError){
@@ -140,7 +123,7 @@ void autonomous_flyer_periodic(void){
     }
 
     // Handle transition based actions and entry actions
-    if(currentState != nextState){
+    if(this->currentState != nextState){
         switch (currentState){
             case STARTUP:
                 // Entry actions for state STARTUP
@@ -190,7 +173,9 @@ void autonomous_flyer_periodic(void){
                 nextState = FATAL_ERROR;
                 break;
         }
+
+        // Update the state of the MAV
+        this->currentState = nextState;
     }
 
-    return;
 }
