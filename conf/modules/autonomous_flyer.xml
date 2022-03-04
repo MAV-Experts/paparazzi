@@ -1,0 +1,46 @@
+<!DOCTYPE module SYSTEM "module.dtd">
+
+<module name="autonomous_flyer">
+
+    <doc>
+        <description>
+            This module is an amazing control module, that allows MAV to "fly around" autonomously just based on a
+            camera feed. The architecture is in a way, that there can be many different ObstacleDetectors registered.
+        </description>
+
+        <!-- TODO: Describe the possible define flags for this module with default values and a short description -->
+        <define name="AUTONOMOUS_FLYER_VISUAL_DETECTION_ID" value="ABI_BROADCAST" description="Messages about obstacles ahead of MAV"/>
+
+    </doc>
+
+    <!-- TODO: find everything, that we will depend on -->
+    <depends>video_thread</depends>
+
+    <header>
+        <file name="autonomous_flyer.h"/>
+        <file name="obstacle_detector/obstacle_detector.h"/>
+        <file name="navigator/navigator.h"/>
+    </header>
+
+    <!-- Define initialization functions for main and helper modules -->
+    <init fun="autonomous_flyer_init()"/>
+    <init fun="obstacle_detector_init()"/>
+    <init fun="navigator_init()"/>
+
+    <!-- TODO: figure out the correct/needed frequency (freq is in Hz) -->
+    <periodic fun="autonomous_flyer_periodic()" freq="4"/>
+    <periodic fun="obstacle_detector_periodic()" freq="2"/>
+    <periodic fun="navigator_periodic()" freq="4"/>
+
+    <makefile target="ap|nps">
+
+        <!-- Main MAV Module -->
+        <file name="autonomous_flyer.c"/>
+
+        <!-- Helper Modules -->
+        <file name="obstacle_detector.c" dir="modules/autonomous_flyer/obstacle_detector" />
+        <file name="navigator.c" dir="modules/autonomous_flyer/navigator" />
+
+    </makefile>
+
+</module>
