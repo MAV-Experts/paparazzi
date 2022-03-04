@@ -28,17 +28,17 @@ public:
      *
      * @return 2D obstacle matrix
      */
-    virtual bool[] getObstacleLocation() = 0;
+    virtual bool** getObstacleMap() = 0;
 
     /**
      * This method returns the distance of an obstacle ahead of the aircraft
      *
      * @return (closest) distance to obstacle
      */
-    virtual double getObstacleDistance() = 0;
+    virtual double** getDistanceMap() = 0;
 
     /**
-     * Thie method returns whether the obstacle detection unit is experiencing a fatal error
+     * This method returns whether the obstacle detection unit is experiencing a fatal error
      *
      * @return ObstacleDetector is experiencing a fatal error
      */

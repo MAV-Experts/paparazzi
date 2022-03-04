@@ -31,10 +31,10 @@ public:
     /**
      * This method is called when there is an obstacle in the way to plan good escape route
      *
-     * @param distance the closest distance to the obstacle
-     * @param obstacleMap the map that contains all the
+     * @param obstacleMap 2D matrix containing booleans whether there is an obstacle or not
+     * @param distanceMap 2D matrix containing distance measures / estimates to front
      */
-    virtual void computeEvasiveWaypoint(double[] obstacleMap, double distance) = 0;
+    virtual void computeEvasiveWaypoint(bool** obstacleMap, double** distanceMap) = 0;
 
     /**
      * Thie method returns whether the navigator is experiencing a fatal error
