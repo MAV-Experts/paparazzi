@@ -17,6 +17,11 @@ class ObstacleDetector {
 public:
 
     /**
+     * This method contains initialization stuff for the specific detector unit
+     */
+    virtual void init() = 0;
+
+    /**
      * This method returns, whether there is an obstacle ahead of the aircraft
      *
      * @return obstacle in front of MAV

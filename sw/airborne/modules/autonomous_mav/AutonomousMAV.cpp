@@ -68,8 +68,6 @@ void AutonomousMav::AutonomousFlyer(){
 void AutonomousMav::heartbeat(){
 
     // Temporarily define action variables that are later replaced by module activity
-    bool startupOkay = false;
-    bool takeoffSuccessful = false;
     bool timerIsDone = false;
 
     // Create local variable for the next state (to catch transitions)
@@ -78,17 +76,26 @@ void AutonomousMav::heartbeat(){
     // Handle state based actions and transitions
     switch (this->currentState){
         case STARTUP:
-            // State based action in startup
+
+            // Initialize the navigation unit
+            this->navigationUnit->start();
+            // Initialize the obstacle detector
+            this->detector->init();
+
+            // Check for transitions
             if(this->aircraftHasError()){
                 nextState = FATAL_ERROR;
             }
-            if(startupOkay){
-                nextState = TAKEOFF;
-            }
+            // After performing startup operations, directly transition to takeoff state
+            nextState = TAKEOFF;
             break;
+
         case FATAL_ERROR:
             // State based action in fatal error
+            this->navigationUnit->land();
+            this->navigationUnit->stop();
             break;
+
         case TAKEOFF:
             // State based action in takeoff
             if(this->aircraftHasError()){
@@ -142,15 +149,20 @@ void AutonomousMav::heartbeat(){
                 break;
             case FATAL_ERROR:
                 // Entry actions for state FATAL_ERROR
+                this->navigationUnit->land();
                 break;
             case TAKEOFF:
                 // Entry actions for state TAKEOFF
+                this->navigationUnit->takeoff();
+                // Check for transitions
                 if(nextState == NORMAL_MOVEMENT){
                     // Transition based actions from takeoff to normal movement
                 }
                 break;
             case LANDING:
                 // Entry actions for state LANDING
+                this->navigationUnit->land();
+                // Check for transitions
                 if(nextState == FATAL_ERROR){
                     // Transition based actions from landing to fatal error
                 }
