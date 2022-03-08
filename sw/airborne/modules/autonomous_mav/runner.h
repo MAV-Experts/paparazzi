@@ -10,7 +10,7 @@
  * This module represents the brain of a MAV that flies fully autonomous through
  */
 
-#include "AutonomousMAV.h"
+#include "AutonomousMAV.c"
 
 /**
  * Paparazzi initialization function

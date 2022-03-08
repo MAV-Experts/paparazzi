@@ -1,83 +1,33 @@
-/*
- * Copyright (C) Group 10
- *
- * TU Delft, 04. Mar 2022
- */
-/**
- * @file "modules/autonomous_mav/AutonomousMAV.cpp"
- * @author Group 10
- *
- * This is the core of the greatest autonomous flight module every created in paparazzi. The architecture is built in
- * a finite state machine, that has two inflight states "Normal Movement" and "Evasive Maneuver" in which two main
- * modules are working: Navigator and ObstacleDetector.
- *
- * TODO:
- *  - Data exchange via ABI messages between the modules
- *  - Do we need a datalink or event function? Data exchange?
- *  - Consider using a set of detectors (maybe for different things?)
- */
+#ifndef AUTONOMOUS_MAV_C
+#define AUTONOMOUS_MAV_C
 
 #include "AutonomousMAV.h"
-
-// TODO: why so ugly!? BAD STYLE!!
-#define NAV_C
-
-#define AUTONOMOUS_MAV_VERBOSE TRUE
-
-#define PRINT(string,...) fprintf(stderr, "[autonomous_mav->%s()] " string,__FUNCTION__ , ##__VA_ARGS__)
-#if AUTONOMOUS_MAV_VERBOSE
-#define VERBOSE_PRINT PRINT
-#else
-#define VERBOSE_PRINT(...)
-#endif
-
-/*
- * Define ABI messaging event: TODO: define structure / type of events
- */
-#ifndef AUTONOMOUS_MAV_VISUAL_DETECTION_ID
-#define AUTONOMOUS_MAV_VISUAL_DETECTION_ID ABI_BROADCAST
-#endif
-
-/**
- * Constructor method of the Autonomous MAV
-*/
-AutonomousMav::AutonomousMav( Navigator * navigator, ObstacleDetector * detector ){
-
-    // Set the initial state to startup
-    this->currentState = STARTUP;
-
-    // Save the navigator
-    this->navigationUnit = navigator;
-
-    // Save the detector
-    this->detector = detector;
-
-}
 
 /**
  * Heartbeat method that is periodically called to run state machine
 */
-void AutonomousMav::heartbeat(){
+void heartbeat(struct MAV *self){
 
     // Compute the time difference between start and now to get when 10 minutes are done
-    std::chrono::steady_clock::time_point currentTime = std::chrono::steady_clock::now();
-    int elapsedMinutes = std::chrono::duration_cast<std::chrono::minutes>(currentTime - this->operationStarted).count();
-    bool timerIsDone = elapsedMinutes > 10;
+//    std::chrono::steady_clock::time_point currentTime = std::chrono::steady_clock::now();
+//    int elapsedMinutes = std::chrono::duration_cast<std::chrono::minutes>(currentTime - this->operationStarted).count();
+//    bool timerIsDone = elapsedMinutes > 10;
+    bool timerIsDone = true;
 
     // Create local variable for the next state (to catch transitions)
-    STATE nextState = this->currentState;
+    enum STATE nextState = self->currentState;
 
     // Handle state based actions and transitions
-    switch (this->currentState){
+    switch (self->currentState){
 
         case STARTUP:
             // Initialize the navigation unit
-            this->navigationUnit->start();
+            self->navigator->start(self->navigator);
             // Initialize the obstacle detector
-            this->detector->init();
+            self->detector->init(self->detector);
 
             // Check for transitions
-            if(this->aircraftHasError())
+            if(self->aircraftHasError(self))
                 nextState = FATAL_ERROR;
 
             // After performing startup operations, directly transition to takeoff state
@@ -90,9 +40,9 @@ void AutonomousMav::heartbeat(){
 
         case TAKEOFF:
             // State based action in takeoff
-            if(this->aircraftHasError())
+            if(self->aircraftHasError(self))
                 nextState = FATAL_ERROR;
-            if(this->navigationUnit->getState() != NAV_NORMAL)
+            if(self->navigator->getState(self->navigator) != NAV_NORMAL)
                 nextState = NORMAL_MOVEMENT;
             break;
 
@@ -102,21 +52,21 @@ void AutonomousMav::heartbeat(){
 
         case NORMAL_MOVEMENT:
             // Compute route
-            this->navigationUnit->computePath(this->detector->getObstacleMap(), this->detector->getDistanceMap());
+            self->navigator->computePath(self->navigator, self->detector->getObstacleMap(self->detector), self->detector->getDistanceMap(self->detector));
             // State based action in normal movement
-            if(this->aircraftHasError() || timerIsDone)
+            if(self->aircraftHasError(self) || timerIsDone)
                 nextState = LANDING;
-            if(this->detector->obstacleAhead())
+            if(self->detector->obstacleAhead(self->detector))
                 nextState = EVASIVE_ACTION;
             break;
 
         case EVASIVE_ACTION:
             // Compute route
-            this->navigationUnit->computePath(this->detector->getObstacleMap(), this->detector->getDistanceMap());
+            self->navigator->computePath(self->navigator, self->detector->getObstacleMap(self->detector), self->detector->getDistanceMap(self->detector));
             // State based action in evasive action
-            if(this->aircraftHasError() || timerIsDone)
+            if(self->aircraftHasError(self) || timerIsDone)
                 nextState = LANDING;
-            if(!this->detector->obstacleAhead() && (!this->aircraftHasError()))
+            if(!self->detector->obstacleAhead(self->detector) && (!self->aircraftHasError(self)))
                 nextState = NORMAL_MOVEMENT;
             break;
 
@@ -131,8 +81,8 @@ void AutonomousMav::heartbeat(){
     }
 
     // Handle transition based actions and entry actions
-    if(this->currentState != nextState){
-        switch (currentState){
+    if(self->currentState != nextState){
+        switch (self->currentState){
 
             case STARTUP:
                 // Check for transition based actions
@@ -141,19 +91,20 @@ void AutonomousMav::heartbeat(){
                 }
                 if(nextState == TAKEOFF){
                     // Start the timer
-                    this->operationStarted = std::chrono::steady_clock::now();
+                    // TODO: solve issues with this
+//                    self->timeWhenStarted = std::chrono::steady_clock::now();
                 }
                 break;
 
             case FATAL_ERROR:
                 // Entry actions for state FATAL_ERROR
-                this->navigationUnit->land();
-                this->navigationUnit->stop();
+                self->navigator->land(self->navigator);
+                self->navigator->stop(self->navigator);
                 break;
 
             case TAKEOFF:
                 // Entry actions for state TAKEOFF
-                this->navigationUnit->takeoff();
+                self->navigator->takeoff(self->navigator);
                 // Check for transitions
                 if(nextState == NORMAL_MOVEMENT){
                     // Transition based actions from takeoff to normal movement
@@ -162,7 +113,7 @@ void AutonomousMav::heartbeat(){
 
             case LANDING:
                 // Entry actions for state LANDING
-                this->navigationUnit->land();
+                self->navigator->land(self->navigator);
                 // Check for transitions
                 if(nextState == FATAL_ERROR){
                     // Transition based actions from landing to fatal error
@@ -198,7 +149,7 @@ void AutonomousMav::heartbeat(){
         }
 
         // Update the state of the MAV
-        this->currentState = nextState;
+        self->currentState = nextState;
     }
 
 }
@@ -208,7 +159,7 @@ void AutonomousMav::heartbeat(){
  *
  * @return MAV experiencing an error
  */
-bool AutonomousMav::aircraftHasError(){
+bool aircraftHasError(struct MAV *self){
 
     // Initiate the error variable with false
     bool hasError = false;
@@ -216,13 +167,37 @@ bool AutonomousMav::aircraftHasError(){
     // TODO: do some internal checking
 
     // Check whether navigator has outch
-    if(this->navigationUnit.hasError())
+    if(self->navigator->hasError(self->navigator))
         hasError = true;
 
     // Check whether obstacle detection module has outch
-    if(this->detector.hasError())
+    if(self->detector->hasDetectionError(self->detector))
         hasError = true;
 
     return hasError;
 
 }
+
+/**
+ * Creator of the MAV instance
+ *
+ * @return Micro Air Vehicle Instance
+ */
+struct MAV createMAV(struct Navigator * nav, struct ObstacleDetector * detector){
+    // Create an object of it
+    struct MAV instance;
+
+    // Do initialization of object
+    instance.currentState = STARTUP;
+    instance.navigator = nav;
+    instance.detector = detector;
+
+    // Append all methods to the struct
+    instance.heartbeat = heartbeat;
+    instance.aircraftHasError = aircraftHasError;
+
+    // Return the instance
+    return instance;
+}
+
+#endif

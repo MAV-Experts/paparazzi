@@ -1,26 +1,13 @@
-/*
- * Copyright (C) Group 10
- *
- * TU Delft, 04. Mar 2022
- */
-/**
- * @file "modules/autonomous_mav/AutonomousMAV.h"
- * @author Group 10
- *
- * This module represents the brain of a MAV that flies fully autonomous through
- */
+#ifndef AUTONOMOUS_MAV
+#define AUTONOMOUS_MAV
 
+#include <stdio.h>
 #include "navigator/Navigator.h"
 #include "obstacle_detector/ObstacleDetector.h"
-#include <chrono>
-#include <time.h>
-#include <stdio.h>
 
-
-#ifndef AUTONOMOUS_MAV_H
-#define AUTONOMOUS_MAV_H
-
-// Define the num with the possible states
+/**
+ * Possible states of the MAV instance
+ */
 enum STATE {
     STARTUP,
     FATAL_ERROR,
@@ -31,51 +18,46 @@ enum STATE {
     DONE
 };
 
-// Define the flyer class
-class AutonomousMav{
-
-private:
+/**
+ * Define a struct that depicts an object of type MAV
+ *
+ */
+struct MAV {
 
     /**
      * Attribute stores the current state of the vehicle
      */
-    STATE currentState;
+    enum STATE currentState;
 
     /**
      * The navigation unit that does the path planning
      */
-    Navigator * navigationUnit;
+    struct Navigator * navigator;
 
     /**
      * The obstacle detection unit that the aircraft relies on
      */
-    ObstacleDetector * detector;
+    struct ObstacleDetector * detector;
 
     /**
      * Time when the system started operating
+     *
+     * TODO: implement some smart way of measuring the time
      */
-    std::chrono::steady_clock::time_point operationStarted;
-
-public:
-
-    /**
-     * Constructor method of the Autonomous MAV
-     */
-    AutonomousMav( Navigator * navigator, ObstacleDetector * detector );
+    int timeWhenStarted;
 
     /**
      * Heartbeat method that is periodically called to run state machine
      */
-    void heartbeat();
+    void (*heartbeat)(struct MAV *self);
 
     /**
      * Method returns whether the aircraft is experiencing an error
      *
      * @return MAV experiencing an error
      */
-    bool aircraftHasError();
+    bool (*aircraftHasError)(struct MAV *self);
 
 };
 
 #endif
-

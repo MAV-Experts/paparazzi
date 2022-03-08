@@ -1,17 +1,18 @@
-/*
- * Copyright (C) Group 10
- *
- * TU Delft, 04. Mar 2022
- */
+#ifndef NAVIGATOR
+#define NAVIGATOR
+
 /**
- * @file "modules/autonomous_mav/navigator/Navigator.h"
- * @author Group 10
+* This file contains the description of the Obstacle Detector instances
  *
+ * @note In the modules directory, different implementations of the ObstacleDetector are given
+ * @date 08.03.2022
+*/
+
+#include <stdbool.h>
+
+/**
+ * The states that the Navigator can be in
  */
-
-#ifndef NAVIGATOR_H
-#define NAVIGATOR_H
-
 enum NAV_STATE {
     NAV_TAKEOFF,
     NAV_LANDING,
@@ -19,23 +20,32 @@ enum NAV_STATE {
     NAV_EVASIVE
 };
 
-class Navigator {
+/**
+ * Raw instance of a Navigator
+ *
+ * @note The navigator performs state-based computation of path and where to fly etc. by implementing the different
+ * functions in the specific c file.
+ */
+struct Navigator {
 
-public:
+    /**
+     * This attribute stores the current state value
+     */
+    enum NAV_STATE currentState;
 
     /**
      * The methods start and stop can be used for initial operations
      *
      */
-    virtual void start() = 0;
-    virtual void stop() = 0;
+    void (*start)(struct Navigator *self);
+    void (*stop)(struct Navigator *self);
 
     /**
      * This method returns whether the MAV is in an evasive action
      *
      * @return MAV currently performing evasive action
      */
-    virtual NAV_STATE getState() = 0;
+    enum NAV_STATE (*getState)(struct Navigator *self);
 
     /**
      * This method is called periodically to compute the route
@@ -45,26 +55,25 @@ public:
      *
      * TODO: might have to be excluded in separate module routine (will have to check)
      */
-    virtual void computePath(bool** obstacleMap, double** distanceMap) = 0;
+    void (*computePath)(struct Navigator *self, bool obstacleMap, double distanceMap);
 
     /**
      * This method returns whether the navigator is experiencing a fatal error
      *
      * @return Navigator is experiencing a fatal error
      */
-    virtual bool hasError() = 0;
+    bool (*hasError)(struct Navigator *self);
 
     /**
      * This method performs take off maneuver
      */
-    virtual void takeoff() = 0;
+    void (*takeoff)(struct Navigator *self);
 
     /**
      * This method performs landing maneuver
      */
-    virtual void land() = 0;
+    void (*land)(struct Navigator *self);
 
 };
 
 #endif
-

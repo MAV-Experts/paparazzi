@@ -15,12 +15,12 @@
  */
 
 #include "runner.h"
-#include "AutonomousMAV.h"
-#include "navigator/modules/BasicNavigator.h"
-#include "obstacle_detector/modules/BasicDetector.h"
+#include "AutonomousMAV.c"
+#include "navigator/modules/BasicNavigator.c"
+#include "obstacle_detector/modules/BasicDetector.c"
 
 // Create an instance of the autonomous mav (global)
-AutonomousMav * mav;
+struct MAV mav;
 
 /**
  * Function that is called once for initialization
@@ -28,11 +28,11 @@ AutonomousMav * mav;
 void runner_init(void){
 
     // Create a basic navigator and detector
-    Navigator * nav = new BasicNavigator();
-    ObstacleDetector * detector = new BasicDetector();
+    struct Navigator nav = createBasicNavigator();
+    struct ObstacleDetector detector = createBasicDetector();
 
     // Create an instance for the MAV
-    mav = new AutonomousMav( nav, detector );
+    mav = createMAV(&nav, &detector);
 }
 
 /**
@@ -40,7 +40,5 @@ void runner_init(void){
  */
 void runner_periodic(void){
     // Pass heartbeat to the system
-    mav->heartbeat();
-    // Return for finishing routine
-    return 0;
+    mav.heartbeat(&mav);
 }
