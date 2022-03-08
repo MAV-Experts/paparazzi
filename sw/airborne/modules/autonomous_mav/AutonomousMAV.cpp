@@ -17,12 +17,10 @@
  *  - Consider using a set of detectors (maybe for different things?)
  */
 
-#include "modules/autonomous_mav/AutonomousMAV.h"
 #include "AutonomousMAV.h"
 
-// TODO: why so ugly!? BAD STYLEE!!
+// TODO: why so ugly!? BAD STYLE!!
 #define NAV_C
-#include "generated/flight_plan.h"
 
 #define AUTONOMOUS_MAV_VERBOSE TRUE
 
@@ -43,16 +41,16 @@
 /**
  * Constructor method of the Autonomous MAV
 */
-void AutonomousMav::AutonomousFlyer(){
+AutonomousMav::AutonomousMav( Navigator * navigator, ObstacleDetector * detector ){
 
     // Set the initial state to startup
     this->currentState = STARTUP;
 
-    // TODO: replace with implementation of navigator
-    this->navigationUnit = new Navigator();
+    // Save the navigator
+    this->navigationUnit = navigator;
 
-    // TODO: replace with implementation of obstacle detector
-    this->detector = new ObstacleDetector();
+    // Save the detector
+    this->detector = detector;
 
 }
 

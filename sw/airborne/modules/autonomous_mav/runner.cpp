@@ -16,6 +16,8 @@
 
 #include "runner.h"
 #include "AutonomousMAV.h"
+#include "navigator/modules/BasicNavigator.h"
+#include "obstacle_detector/modules/BasicDetector.h"
 
 // Create an instance of the autonomous mav (global)
 AutonomousMav * mav;
@@ -24,8 +26,13 @@ AutonomousMav * mav;
  * Function that is called once for initialization
  */
 void runner_init(void){
+
+    // Create a basic navigator and detector
+    Navigator * nav = new BasicNavigator();
+    ObstacleDetector * detector = new BasicDetector();
+
     // Create an instance for the MAV
-    mav = new AutonomousMav();
+    mav = new AutonomousMav( nav, detector );
 }
 
 /**
@@ -35,5 +42,5 @@ void runner_periodic(void){
     // Pass heartbeat to the system
     mav->heartbeat();
     // Return for finishing routine
-    return;
+    return 0;
 }

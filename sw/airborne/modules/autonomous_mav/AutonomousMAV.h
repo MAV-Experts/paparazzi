@@ -11,12 +11,8 @@
  */
 
 #include "navigator/Navigator.h"
-#include <chrono>
 #include "obstacle_detector/ObstacleDetector.h"
-#include "firmwares/rotorcraft/navigation.h"
-#include "generated/airframe.h"
-#include "state.h"
-#include "subsystems/abi.h"
+#include <chrono>
 #include <time.h>
 #include <stdio.h>
 
@@ -65,7 +61,7 @@ public:
     /**
      * Constructor method of the Autonomous MAV
      */
-    void AutonomousMav();
+    AutonomousMav( Navigator * navigator, ObstacleDetector * detector );
 
     /**
      * Heartbeat method that is periodically called to run state machine
@@ -79,7 +75,7 @@ public:
      */
     bool aircraftHasError();
 
-}
+};
 
 #endif
 
