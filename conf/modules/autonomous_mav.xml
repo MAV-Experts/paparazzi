@@ -1,0 +1,44 @@
+<!DOCTYPE module SYSTEM "module.dtd">
+
+<module name="autonomous_mav">
+
+    <doc>
+
+        <description>
+            This module is an amazing control module, that allows MAV to "fly around" autonomously just based on a
+            camera feed. The architecture is in a way, that there can be many different ObstacleDetectors registered.
+        </description>
+
+        <!-- TODO: Describe the possible define flags for this module with default values and a short description -->
+        <define name="AUTONOMOUS_MAV_VISUAL_DETECTION_ID" value="ABI_BROADCAST" description="Messages about obstacles ahead of MAV"/>
+
+    </doc>
+
+    <!-- TODO: find everything, that we will depend on -->
+    <depends>video_thread</depends>
+
+    <header>
+        <file name="AutonomousMAV.h"/>
+        <file name="obstacle_detector/ObstacleDetector.h"/>
+        <file name="navigator/Navigator.h"/>
+    </header>
+
+    <!-- Define initialization functions for main and helper modules -->
+    <init fun="runner_init()"/>
+
+    <!-- TODO: figure out the correct/needed frequency (freq is in Hz) and maybe exclude (sub)modules -->
+    <periodic fun="runner_periodic()" freq="4"/>
+
+    <makefile target="ap|nps">
+
+        <!-- Main Runner -->
+        <file name="runner.cpp"/>
+
+        <!-- Modules -->
+        <file name="autonomous_mav.cpp"/>
+        <file name="ObstacleDetector.cpp" dir="modules/autonomous_mav/obstacle_detector" />
+        <file name="Navigator.cpp" dir="modules/autonomous_mav/navigator" />
+
+    </makefile>
+
+</module>
