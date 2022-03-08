@@ -21,15 +21,18 @@
 
 // Create an instance of the autonomous mav (global)
 struct MAV mav;
+// Create a basic navigator and detector
+struct Navigator nav;
+struct ObstacleDetector detector;
 
 /**
  * Function that is called once for initialization
  */
 void runner_init(void){
 
-    // Create a basic navigator and detector
-    struct Navigator nav = createBasicNavigator();
-    struct ObstacleDetector detector = createBasicDetector();
+    // Create navigator and detector
+    nav = createBasicNavigator();
+    detector = createBasicDetector();
 
     // Create an instance for the MAV
     mav = createMAV(&nav, &detector);

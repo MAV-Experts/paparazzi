@@ -5,22 +5,27 @@
 #include "stdbool.h"
 
 void init(struct ObstacleDetector *self){
+    // TODO: imlpement cool stuff
 
 }
 
 bool obstacleAhead(struct ObstacleDetector *self){
+    // TODO: imlpement cool stuff
     return false;
 }
 
 bool getObstacleMap(struct ObstacleDetector *self){
+    // TODO: imlpement cool stuff
     return false;
 }
 
 double getDistanceMap(struct ObstacleDetector *self){
+    // TODO: imlpement cool stuff
     return 0;
 }
 
 bool hasDetectionError(struct ObstacleDetector *self){
+    // TODO: imlpement cool stuff
     return false;
 }
 
