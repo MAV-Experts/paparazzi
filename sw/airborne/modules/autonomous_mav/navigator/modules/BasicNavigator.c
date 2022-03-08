@@ -46,6 +46,10 @@ struct Navigator createBasicNavigator(){
     // Do initialization of object TODO: should be some startup state
     instance.currentState = NAV_NORMAL;
 
+    instance.newStuff = struct {
+        int a = 0;
+    };
+
     // Append all methods to the struct
     instance.start = start;
     instance.stop = stop;
