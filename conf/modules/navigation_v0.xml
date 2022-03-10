@@ -1,0 +1,21 @@
+<!DOCTYPE module SYSTEM "module.dtd">
+
+<module name="navigation_v0">
+  <doc>
+    <description>
+    Navigation v0: attempt
+    </description>
+  </doc>
+      
+  <dep>
+    <depends>cv_detect_color_object</depends>
+  </dep>
+  <header>
+    <file name="Navigation.h"/>
+  </header>
+  <init fun="obstacle_avoider_guided_init()"/>
+  <periodic fun="obstacle_avoider_guided_periodic()" freq="4"/>
+  <makefile target="ap|nps">
+    <file name="Navigation.c"/>
+  </makefile>
+</module>
