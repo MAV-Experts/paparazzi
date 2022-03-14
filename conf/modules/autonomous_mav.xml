@@ -15,7 +15,7 @@
     </doc>
 
     <!-- TODO: find everything, that we will depend on -->
-    <depends>video_thread</depends>
+    
 
     <header>
         <file name="AutonomousMAV.h"/>
