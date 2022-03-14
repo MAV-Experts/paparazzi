@@ -6,7 +6,6 @@
 
 void init(struct ObstacleDetector *self){
     // TODO: imlpement cool stuff
-
 }
 
 bool obstacleAhead(struct ObstacleDetector *self){
