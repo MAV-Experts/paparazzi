@@ -17,13 +17,13 @@ enum NAV_STATE getState(struct Navigator *self){
     return NAV_NORMAL;
 }
 
-void computePath(struct Navigator *self, bool obstacleMap, double distanceMap){
+void computePath(struct Navigator *self, int obstacleMap, double distanceMap){
     // TODO: imlpement cool stuff
 }
 
-bool hasError(struct Navigator *self){
+int hasError(struct Navigator *self){
     // TODO: imlpement cool stuff
-    return false;
+    return 0;
 }
 
 void takeoff(struct Navigator *self){
@@ -45,10 +45,6 @@ struct Navigator createBasicNavigator(){
 
     // Do initialization of object TODO: should be some startup state
     instance.currentState = NAV_NORMAL;
-
-    instance.newStuff = struct {
-        int a = 0;
-    };
 
     // Append all methods to the struct
     instance.start = start;

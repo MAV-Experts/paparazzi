@@ -1,7 +1,6 @@
 #ifndef AUTONOMOUS_MAV
 #define AUTONOMOUS_MAV
 
-#include <stdio.h>
 #include "navigator/Navigator.h"
 #include "obstacle_detector/ObstacleDetector.h"
 
@@ -56,7 +55,7 @@ struct MAV {
      *
      * @return MAV experiencing an error
      */
-    bool (*aircraftHasError)(struct MAV *self);
+    int (*aircraftHasError)(struct MAV *self);
 
 };
 

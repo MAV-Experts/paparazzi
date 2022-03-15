@@ -8,8 +8,6 @@
  * @date 08.03.2022
 */
 
-#include <stdbool.h>
-
 /**
  * Raw instance of a Navigator
  *
@@ -27,7 +25,7 @@ struct ObstacleDetector {
      *
      * @return BOOL obstacle in front of MAV
      */
-    bool (*obstacleAhead)(struct ObstacleDetector *self);
+    int (*obstacleAhead)(struct ObstacleDetector *self);
 
     /**
      * This method returns a 2D bool matrix which shows where the obstacle is located in front of the aircraft
@@ -36,7 +34,7 @@ struct ObstacleDetector {
      *
      * @return 2D BOOL obstacle matrix
      */
-    bool (*getObstacleMap)(struct ObstacleDetector *self);
+    int (*getObstacleMap)(struct ObstacleDetector *self);
 
     /**
      * This method returns the distance of an obstacle ahead of the aircraft
@@ -52,7 +50,7 @@ struct ObstacleDetector {
      *
      * @return BOOL ObstacleDetector is experiencing a fatal error
      */
-    bool (*hasDetectionError)(struct ObstacleDetector *self);
+    int (*hasDetectionError)(struct ObstacleDetector *self);
 
 };
 

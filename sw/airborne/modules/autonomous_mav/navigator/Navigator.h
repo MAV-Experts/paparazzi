@@ -8,8 +8,6 @@
  * @date 08.03.2022
 */
 
-#include <stdbool.h>
-
 /**
  * The states that the Navigator can be in
  */
@@ -55,14 +53,14 @@ struct Navigator {
      *
      * TODO: might have to be excluded in separate module routine (will have to check)
      */
-    void (*computePath)(struct Navigator *self, bool obstacleMap, double distanceMap);
+    void (*computePath)(struct Navigator *self, int obstacleMap, double distanceMap);
 
     /**
      * This method returns whether the navigator is experiencing a fatal error
      *
      * @return Navigator is experiencing a fatal error
      */
-    bool (*hasError)(struct Navigator *self);
+    int (*hasError)(struct Navigator *self);
 
     /**
      * This method performs take off maneuver

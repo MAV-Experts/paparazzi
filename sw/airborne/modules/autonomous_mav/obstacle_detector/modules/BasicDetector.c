@@ -2,20 +2,19 @@
 #define BASIC_DETECTOR_C
 
 #include "../ObstacleDetector.h"
-#include "stdbool.h"
 
 void init(struct ObstacleDetector *self){
     // TODO: imlpement cool stuff
 }
 
-bool obstacleAhead(struct ObstacleDetector *self){
+int obstacleAhead(struct ObstacleDetector *self){
     // TODO: imlpement cool stuff
-    return false;
+    return 0;
 }
 
-bool getObstacleMap(struct ObstacleDetector *self){
+int getObstacleMap(struct ObstacleDetector *self){
     // TODO: imlpement cool stuff
-    return false;
+    return 0;
 }
 
 double getDistanceMap(struct ObstacleDetector *self){
@@ -23,9 +22,9 @@ double getDistanceMap(struct ObstacleDetector *self){
     return 0;
 }
 
-bool hasDetectionError(struct ObstacleDetector *self){
+int hasDetectionError(struct ObstacleDetector *self){
     // TODO: imlpement cool stuff
-    return false;
+    return 0;
 }
 
 struct ObstacleDetector createBasicDetector(){

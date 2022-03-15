@@ -12,7 +12,7 @@ void heartbeat(struct MAV *self){
 //    std::chrono::steady_clock::time_point currentTime = std::chrono::steady_clock::now();
 //    int elapsedMinutes = std::chrono::duration_cast<std::chrono::minutes>(currentTime - this->operationStarted).count();
 //    bool timerIsDone = elapsedMinutes > 10;
-    bool timerIsDone = true;
+    int timerIsDone = 1;
 
     // Create local variable for the next state (to catch transitions)
     enum STATE nextState = self->currentState;
@@ -159,20 +159,20 @@ void heartbeat(struct MAV *self){
  *
  * @return MAV experiencing an error
  */
-bool aircraftHasError(struct MAV *self){
+int aircraftHasError(struct MAV *self){
 
     // Initiate the error variable with false
-    bool hasError = false;
+    int hasError = 0;
 
     // TODO: do some internal checking
 
     // Check whether navigator has outch
     if(self->navigator->hasError(self->navigator))
-        hasError = true;
+        hasError = 1;
 
     // Check whether obstacle detection module has outch
     if(self->detector->hasDetectionError(self->detector))
-        hasError = true;
+        hasError = 1;
 
     return hasError;
 
