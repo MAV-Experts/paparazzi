@@ -1,7 +1,4 @@
-#ifndef BASIC_DETECTOR_C
-#define BASIC_DETECTOR_C
-
-#include "../ObstacleDetector.h"
+#include "BasicDetector.h"
 
 void init(struct ObstacleDetector *self){
     // TODO: imlpement cool stuff
@@ -43,5 +40,3 @@ struct ObstacleDetector createBasicDetector(){
 
     return instance;
 }
-
-#endif

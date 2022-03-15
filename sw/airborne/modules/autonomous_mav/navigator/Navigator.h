@@ -1,12 +1,12 @@
-#ifndef NAVIGATOR
-#define NAVIGATOR
-
 /**
 * This file contains the description of the Obstacle Detector instances
  *
  * @note In the modules directory, different implementations of the ObstacleDetector are given
  * @date 08.03.2022
 */
+
+#ifndef AUTONOMOUS_MAV_NAVIGATOR_H
+#define AUTONOMOUS_MAV_NAVIGATOR_H
 
 /**
  * The states that the Navigator can be in
@@ -74,4 +74,4 @@ struct Navigator {
 
 };
 
-#endif
+#endif //AUTONOMOUS_MAV_NAVIGATOR_H

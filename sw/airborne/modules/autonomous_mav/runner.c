@@ -15,9 +15,6 @@
  */
 
 #include "runner.h"
-#include "AutonomousMAV.c"
-#include "navigator/modules/BasicNavigator.c"
-#include "obstacle_detector/modules/BasicDetector.c"
 
 // Create an instance of the autonomous mav (global)
 struct MAV mav;

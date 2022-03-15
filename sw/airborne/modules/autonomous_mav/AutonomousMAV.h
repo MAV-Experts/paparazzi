@@ -1,5 +1,5 @@
-#ifndef AUTONOMOUS_MAV
-#define AUTONOMOUS_MAV
+#ifndef AUTONOMOUS_MAV_H
+#define AUTONOMOUS_MAV_H
 
 #include "navigator/Navigator.h"
 #include "obstacle_detector/ObstacleDetector.h"
@@ -59,4 +59,23 @@ struct MAV {
 
 };
 
-#endif
+/**
+ * Heartbeat method that is periodically called to run state machine
+*/
+void heartbeat(struct MAV *self);
+
+/**
+ * Method returns whether the aircraft is experiencing an error
+ *
+ * @return MAV experiencing an error
+ */
+int aircraftHasError(struct MAV *self);
+
+/**
+ * Creator of the MAV instance
+ *
+ * @return Micro Air Vehicle Instance
+ */
+struct MAV createMAV(struct Navigator * nav, struct ObstacleDetector * detector);
+
+#endif //AUTONOMOUS_MAV_H

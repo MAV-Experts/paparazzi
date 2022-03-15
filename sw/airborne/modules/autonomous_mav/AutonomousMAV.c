@@ -1,11 +1,6 @@
-#ifndef AUTONOMOUS_MAV_C
-#define AUTONOMOUS_MAV_C
-
 #include "AutonomousMAV.h"
 
-/**
- * Heartbeat method that is periodically called to run state machine
-*/
+
 void heartbeat(struct MAV *self){
 
     // Compute the time difference between start and now to get when 10 minutes are done
@@ -154,11 +149,6 @@ void heartbeat(struct MAV *self){
 
 }
 
-/**
- * Method returns whether the aircraft is experiencing an error
- *
- * @return MAV experiencing an error
- */
 int aircraftHasError(struct MAV *self){
 
     // Initiate the error variable with false
@@ -178,11 +168,6 @@ int aircraftHasError(struct MAV *self){
 
 }
 
-/**
- * Creator of the MAV instance
- *
- * @return Micro Air Vehicle Instance
- */
 struct MAV createMAV(struct Navigator * nav, struct ObstacleDetector * detector){
     // Create an object of it
     struct MAV instance;
@@ -199,5 +184,3 @@ struct MAV createMAV(struct Navigator * nav, struct ObstacleDetector * detector)
     // Return the instance
     return instance;
 }
-
-#endif

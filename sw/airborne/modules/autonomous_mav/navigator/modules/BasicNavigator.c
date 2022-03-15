@@ -1,7 +1,4 @@
-#ifndef BASIC_NAVIGATOR_C
-#define BASIC_NAVIGATOR_C
-
-#include "../Navigator.h"
+#include "BasicNavigator.h"
 
 
 void start(struct Navigator *self){
@@ -34,11 +31,6 @@ void land(struct Navigator *self){
     // TODO: imlpement cool stuff
 }
 
-/**
- * Creator of the MAV instance
- *
- * @return Basic Navigator
- */
 struct Navigator createBasicNavigator(){
     // Create an object of it
     struct Navigator instance;
@@ -58,5 +50,3 @@ struct Navigator createBasicNavigator(){
     // Return the instance
     return instance;
 }
-
-#endif
