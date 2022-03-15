@@ -14,13 +14,10 @@
 
     </doc>
 
-    <!-- TODO: find everything, that we will depend on -->
-    
-
     <header>
-        <file name="AutonomousMAV.h"/>
-        <file name="obstacle_detector/ObstacleDetector.h"/>
-        <file name="navigator/Navigator.h"/>
+        <file name="runner.h"/>
+<!--        <file name="obstacle_detector/ObstacleDetector.h"/>-->
+<!--        <file name="navigator/Navigator.h"/>-->
     </header>
 
     <!-- Define initialization functions for main and helper modules -->
@@ -35,9 +32,9 @@
         <file name="runner.cpp"/>
 
         <!-- Modules -->
-        <file name="autonomous_mav.cpp"/>
-        <file name="ObstacleDetector.cpp" dir="modules/autonomous_mav/obstacle_detector" />
-        <file name="Navigator.cpp" dir="modules/autonomous_mav/navigator" />
+<!--        <file name="autonomous_mav.cpp"/>-->
+<!--        <file name="ObstacleDetector.cpp" dir="modules/autonomous_mav/obstacle_detector" />-->
+<!--        <file name="Navigator.cpp" dir="modules/autonomous_mav/navigator" />-->
 
     </makefile>
 
