@@ -87,7 +87,7 @@ void obstacle_avoider_guided_init(void)
 
 void obstacle_avoider_guided_periodic(int obstacle_pix[n][m]){
 
-
+//count all instances in the obstacle matrix
 int  sum_l = 0, sum_r = 0,i, j;
     for (i = 0; i < n; ++i) {
            for (j = 0; j < m; ++j) {
