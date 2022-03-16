@@ -1,4 +1,4 @@
-#include "modules/navigation_v0/Navigation.h"
+#include "modules/orange_avoider/orange_avoider_guided.h"
 #include "firmwares/rotorcraft/guidance/guidance_h.h"
 #include "generated/airframe.h"
 #include "state.h"
@@ -15,8 +15,6 @@
 #define VERBOSE_PRINT(...)
 #endif
 
-uint8_t chooseIncrementAvoidance(void);
-
 enum navigation_state_t {
   SAFE,
   OBSTACLE_FOUND,
@@ -28,7 +26,7 @@ enum navigation_state_t {
 // define settings
 float obst_count_frac = 0.18f;       // obstacle detection threshold as a fraction of total of image
 float oag_floor_count_frac = 0.05f;       // floor detection threshold as a fraction of total of image
-float oag_max_speed = 0.8f;               // max flight speed [m/s]
+float oag_max_speed = 0.7f;               // max flight speed [m/s]
 float oag_heading_rate = RadOfDeg(30.f);  // heading change setpoint for avoidance [rad/s]
 
 // define and initialise global variables
@@ -41,8 +39,22 @@ int16_t obstacle_free_confidence = 0;   // a measure of how certain we are that 
 float left_pix = 0;                     // number of ones in left side of matrix
 float right_pix = 0;                    // number of ones in right side of matrix
 int obstacle_pix[10][20] = {0};         // Matrix of obstacle detection
+int n =  sizeof obstacle_pix / sizeof obstacle_pix[0];
+int m = sizeof obstacle_pix[0] / sizeof(int);
+
+int chooseIncrementAvoidance(int obstacle_pix[n][m], int, int);
 
 const int16_t max_trajectory_confidence = 5;  // number of consecutive negative object detections to be sure we are obstacle free
+
+#ifndef ORANGE_AVOIDER_VISUAL_DETECTION_ID
+#error This module requires two color filters, as such you have to define ORANGE_AVOIDER_VISUAL_DETECTION_ID to the orange filter
+#error Please define ORANGE_AVOIDER_VISUAL_DETECTION_ID to be COLOR_OBJECT_DETECTION1_ID or COLOR_OBJECT_DETECTION2_ID in your airframe
+#endif
+static abi_event color_detection_ev;
+static void color_detection_cb(uint8_t __attribute__((unused)) sender_id,
+                               int16_t __attribute__((unused)) pixel_x, int16_t __attribute__((unused)) pixel_y,
+                               int16_t __attribute__((unused)) pixel_width, int16_t __attribute__((unused)) pixel_height,
+                               int32_t quality, int16_t __attribute__((unused)) extra){}
 
 #ifndef FLOOR_VISUAL_DETECTION_ID
 #error This module requires two color filters, as such you have to define FLOOR_VISUAL_DETECTION_ID to the orange filter
@@ -62,25 +74,26 @@ void obstacle_avoider_guided_init(void)
 {
   // Initialise random values
   srand(time(NULL));
-  chooseIncrementAvoidance();
+  chooseIncrementAvoidance(obstacle_pix[n][m], n, m);
 
   // bind our colorfilter callbacks to receive the color filter outputs
   AbiBindMsgVISUAL_DETECTION(FLOOR_VISUAL_DETECTION_ID, &floor_detection_ev, floor_detection_cb);
+  AbiBindMsgVISUAL_DETECTION(ORANGE_AVOIDER_VISUAL_DETECTION_ID, &color_detection_ev, color_detection_cb);
 }
 
 
 
 
 
-void obstacle_avoider_guided_periodic(obstacle_pix){
-  int n =  sizeof obstacle_pix / sizeof obstacle_pix[0];
-  int m = sizeof obstacle_pix[0] / sizeof(int);
-  int  sum_l = 0, sum_r = 0,i, j;
-  for (i = 0; i < n; ++i) {
-    for (j = 0; j < m; ++j) {
-      obstacle_count = obstacle_pix[i][j];
+void obstacle_avoider_guided_periodic(int obstacle_pix[n][m]){
+
+
+int  sum_l = 0, sum_r = 0,i, j;
+    for (i = 0; i < n; ++i) {
+           for (j = 0; j < m; ++j) {
+                          obstacle_count += obstacle_pix[i][j];
+           }
     }
-  }
 
   // Only run the mudule if we are in the correct flight mode
   if (guidance_h.mode != GUIDANCE_H_MODE_GUIDED) {
@@ -90,11 +103,11 @@ void obstacle_avoider_guided_periodic(obstacle_pix){
   }
 
   // compute current color thresholds
-  int32_t obstacle_count_threshold = oag_color_count_frac * m * n;
+  int32_t obstacle_count_threshold = obst_count_frac * m * n;
   int32_t floor_count_threshold = oag_floor_count_frac * front_camera.output_size.w * front_camera.output_size.h;
   float floor_centroid_frac = floor_centroid / (float)front_camera.output_size.h / 2.f;
 
-  VERBOSE_PRINT("Color_count: %d  threshold: %d state: %d \n", color_count, color_count_threshold, navigation_state);
+  // VERBOSE_PRINT("Color_count: %d  threshold: %d state: %d \n", color_count, color_count_threshold, navigation_state);
   VERBOSE_PRINT("Floor count: %d, threshold: %d\n", floor_count, floor_count_threshold);
   VERBOSE_PRINT("Floor centroid: %f\n", floor_centroid_frac);
 
@@ -126,7 +139,7 @@ void obstacle_avoider_guided_periodic(obstacle_pix){
       guidance_h_set_guided_body_vel(0, 0);
 
       // randomly select new search direction
-      chooseIncrementAvoidance();
+      chooseIncrementAvoidance(obstacle_pix[n][m], n, m);
 
       navigation_state = SEARCH_FOR_SAFE_HEADING;
 
@@ -170,21 +183,21 @@ void obstacle_avoider_guided_periodic(obstacle_pix){
 }
 
 
-uint8_t chooseIncrementAvoidance(obstacle_pix,n,m)
+chooseIncrementAvoidance(int obstacle_pix[n][m], int n, int m)
 {
-int  left_pix = 0, right_pix = 0,i, j;
+int  sum_l = 0, sum_r = 0,i, j;
     for (i = 0; i < n; ++i) {
            for (j = 0; j < m/2; ++j) {
-                          left_pix = obstacle_pix[i][j];
+                          sum_l +=  obstacle_pix[i][j];
            }
     }
     for (i = 0; i < n; ++i) {
            for (j = m/2; j < m; ++j) {
-                          right_pix += obstacle_pix[i][j];
+                          sum_r +=  obstacle_pix[i][j];
            }
     }
   // Randomly choose CW or CCW avoiding direction
-  if (left_pix < right_pix) {
+  if (sum_l < sum_r) {
     avoidance_heading_direction = -1.f;
     VERBOSE_PRINT("Set avoidance increment to: %f\n", avoidance_heading_direction * oag_heading_rate);
   } else {
