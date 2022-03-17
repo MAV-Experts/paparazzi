@@ -240,6 +240,12 @@ uint32_t find_object_centroid(struct image_t *img, int32_t* p_xc, int32_t* p_yc,
         cnt ++;
         tot_x += x;
         tot_y += y;
+        // trek alleen de u van elkaar af.Gebruik signed integers. output is een plaatje met de randen
+
+        // implementeer een functie in die per vakdeel kijkt om te waar in het beeld de randen zijn
+
+        // Adviseer de beste heading (gecodeerd met de navigation team)
+
         if (draw){
           *yp = 255;  // make pixel brighter in image
         }
