@@ -49,6 +49,10 @@
     </target>
 
   <!-- Subsystem section -->
+    <module name="navigation_v0">
+      <define name="ORANGE_AVOIDER_VISUAL_DETECTION_ID" value="COLOR_OBJECT_DETECTION1_ID"/>
+      <define name="FLOOR_VISUAL_DETECTION_ID" value="COLOR_OBJECT_DETECTION1_ID"/>
+    </module>
     <module name="telemetry" type="transparent_udp"/>
     <module name="radio_control" type="datalink"/>
     <module name="motor_mixing"/>
