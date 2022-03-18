@@ -32,9 +32,9 @@
         <file name="runner.cpp"/>
 
         <!-- Modules -->
-       <file name="AutonomousMav.cpp"/>
-        <file name="obstacle_detector/modules/BasicDetector.c"/>
-        <file name="navigator/modules/BasicNavigator.c" />
+<!--        <file name="autonomous_mav.cpp"/>-->
+<!--        <file name="ObstacleDetector.cpp" dir="modules/autonomous_mav/obstacle_detector" />-->
+<!--        <file name="Navigator.cpp" dir="modules/autonomous_mav/navigator" />-->
 
     </makefile>
 
