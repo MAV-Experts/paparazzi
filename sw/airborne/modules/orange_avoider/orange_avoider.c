@@ -4,6 +4,7 @@
  * This file is part of paparazzi
  *
  */
+
 /**
  * @file "modules/orange_avoider/orange_avoider.c"
  * @author Roland Meertens

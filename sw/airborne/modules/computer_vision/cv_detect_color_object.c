@@ -278,8 +278,10 @@ uint32_t find_object_centroid(struct image_t *img, int32_t* p_xc, int32_t* p_yc,
 void color_object_detector_periodic(void)
 {
   static struct color_object_t local_filters[2];
+  //Mutual exclusion with the navigator part. This file runs at 60Hz whereas the orange_avoider.c file runs at 500Hz.
   pthread_mutex_lock(&mutex);
   memcpy(local_filters, global_filters, 2*sizeof(struct color_object_t));
+  //Unlock the mutual exclusion
   pthread_mutex_unlock(&mutex);
 
   if(local_filters[0].updated){
