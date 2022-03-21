@@ -66,8 +66,8 @@
       <define name="COLOR_OBJECT_DETECTOR_FPS1" value="0"/>
       <define name="COLOR_OBJECT_DETECTOR_DRAW1" value="1"/>
     </module>
-    <module name="autonomous_mav">
-      <define name="ORANGE_AVOIDER_VISUAL_DETECTION_ID" value="COLOR_OBJECT_DETECTION1_ID"/>
+    <module name="no_green">
+      <define name="NO_GREEN_VISUAL_DETECTION_ID" value="COLOR_OBJECT_DETECTION1_ID"/>
     </module>
     <module name="video_rtp_stream">
       <define name="VIEWVIDEO_CAMERA" value="front_camera"/>
@@ -77,7 +77,7 @@
     </module>
   </firmware>
 
-  <!-- Jesse: below here is standard stuff I think we should not change -->
+<!-- Jesse: below here is standard stuff I think we should not change -->
 
   <commands>
     <axis name="PITCH" failsafe_value="0"/>
