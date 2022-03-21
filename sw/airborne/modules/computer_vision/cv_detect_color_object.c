@@ -226,25 +226,28 @@ uint32_t find_object_centroid(struct image_t *img, int32_t* p_xc, int32_t* p_yc,
   uint32_t cnt = 0;
   uint32_t tot_x = 0;
   uint32_t tot_y = 0;
-  uint32_t edge_count = 0;
   uint8_t *we = img->buf;
-
+  uint8_t *buffer = img->buf;
   uint8_t previous_Y = 0;
   uint8_t edge_threshhold = 0;
-
+  uint8_t zone_1_count = 0;
+  uint8_t zone_2_count = 0;
+  uint8_t zone_3_count = 0;
+  uint8_t zone_4_count = 0;
+  uint8_t zone_5_count = 0;
+  uint8_t bin_size = img->w / 5;
   // Go through all the pixels
   //move along the y axis
   for (uint16_t y = 0; y < img->h; y++) {
 	//for each row the previous illumation  0;
 	previous_Y = 0;
-
+	uint8_t dY = 0;
 	//move along the x axis
     for (uint16_t x = 0; x < img->w; x ++) {
 
       /*******Color detection *********/
       // Check if the color is inside the specified values
       uint8_t *yp, *up, *vp;
-      uint8_t dY;
 
       if (x % 2 == 0) {
         // Even x
@@ -275,14 +278,41 @@ uint32_t find_object_centroid(struct image_t *img, int32_t* p_xc, int32_t* p_yc,
 
         }
 
-        /**Jonathan Dijkstra - edge detector using gaussian blur and difference in y components **/
+        /**Jonathan Dijkstra - edge detector using gaussian blur and difference in y components
+         * 1. Calculate difference in lumanination (Y value) between two adject pixels
+         * 2. If the difference is above some threshold, count an edge
+         * 3. Keep track of the amount of edge detections in the x spectrum
+         *
+         * **/
 
-        /******Edge detection******/
+
+
         //Calculate difference in pixel lumination
         dY = yp - previous_Y;
-       if(dY <= edge_threshhold)
+        //Check if the difference above a certain treshhold
+       if(dY >= edge_threshhold)
         {
-        	edge_count ++;
+        	// Find where the edge is
+    	   if(x >= 0 && x <= bin_size )
+    	   {
+    		  zone_1_count++;
+    	   }
+    	   else if(x > bin_size && x<= (2 * bin_size))
+    	   {
+    		   zone_2_count++;
+    	   }
+    	   else if(x > (2 * bin_size) && x<= (3 * bin_size))
+    	   {
+    		   zone_3_count++;
+    	   }
+    	   else if(x > (3 * bin_size) && x<= (4 * bin_size))
+    	   {
+    		   zone_4_count++;
+    	   }
+    	   else
+    	   {
+    		   zone_5_count++;
+    	   }
         }
         previous_Y = yp;
       }
