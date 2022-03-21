@@ -30,8 +30,9 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <opencv2/core/core.hpp>
 
-// Module settings
+// Module setting
 extern uint8_t cod_lum_min1;
 extern uint8_t cod_lum_max1;
 extern uint8_t cod_cb_min1;
@@ -54,3 +55,19 @@ extern void color_object_detector_init(void);
 extern void color_object_detector_periodic(void);
 
 #endif /* COLOR_OBJECT_DETECTOR_CV_H */
+
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+//Put the functions here
+
+int opencv_example(char *img, int width, int height);
+int find_edges(struct image_t *img);
+
+#ifdef __cplusplus
+}
+#endif
+
+

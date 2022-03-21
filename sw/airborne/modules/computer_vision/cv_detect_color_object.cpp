@@ -54,6 +54,11 @@ static pthread_mutex_t mutex;
 #define COLOR_OBJECT_DETECTOR_FPS2 0 ///< Default FPS (zero means run at camera fps)
 #endif
 
+//define namespaces
+using namespace cv;
+using namespace std;
+
+
 // Filter Settings
 uint8_t cod_lum_min1 = 0;
 uint8_t cod_lum_max1 = 0;
@@ -87,6 +92,7 @@ uint32_t find_object_centroid(struct image_t *img, int32_t* p_xc, int32_t* p_yc,
                               uint8_t cb_min, uint8_t cb_max,
                               uint8_t cr_min, uint8_t cr_max);
 
+int find_edges(struct image_t *img);
 /*
  * object_detector
  * @param img - input image to process
@@ -128,27 +134,33 @@ static struct image_t *object_detector(struct image_t *img, uint8_t filter)
 
   // Filter and find centroid
   uint32_t count = find_object_centroid(img, &x_c, &y_c, draw, lum_min, lum_max, cb_min, cb_max, cr_min, cr_max);
+
   // Print object count en treshold, print image centre
   VERBOSE_PRINT("Color count %d: %u, threshold %u, x_c %d, y_c %d\n", camera, object_count, count_threshold, x_c, y_c);
   VERBOSE_PRINT("centroid %d: (%d, %d) r: %4.2f a: %4.2f\n", camera, x_c, y_c,
         hypotf(x_c, y_c) / hypotf(img->w * 0.5, img->h * 0.5), RadOfDeg(atan2f(y_c, x_c)));
 
+  //lock the mutual exclusion
   pthread_mutex_lock(&mutex);
+  //color count
   global_filters[filter-1].color_count = count;
   global_filters[filter-1].x_c = x_c;
   global_filters[filter-1].y_c = y_c;
+  //updated
   global_filters[filter-1].updated = true;
+  //unlock the mutual exclusion
   pthread_mutex_unlock(&mutex);
 
   return img;
 }
-//Create two object detector structures
+//Create an object detector with filter options 1
 struct image_t *object_detector1(struct image_t *img, uint8_t camera_id);
 struct image_t *object_detector1(struct image_t *img, uint8_t camera_id __attribute__((unused)))
 {
   return object_detector(img, 1);
 }
 
+//Create an object detector with filter options 2
 struct image_t *object_detector2(struct image_t *img, uint8_t camera_id);
 struct image_t *object_detector2(struct image_t *img, uint8_t camera_id __attribute__((unused)))
 {
@@ -195,6 +207,26 @@ void color_object_detector_init(void)
 #endif
 }
 
+/**Jonathan Dijkstra - edge detector using canny filter **/
+//Function find edges
+int find_edges(struct image_t *img)
+{
+	// Blur the image for noise reduction
+	Mat img_blur;
+	GaussianBlur(img, img_blur, Size(3,3), SigmaX=0, SigmaY=0);
+
+
+	// Canny edge detection
+	Mat edges;
+	Canny(img_blur, edges, 100, 200, 3, false);
+	// Display canny edge detected image
+	//imshow("Canny edge detection", edges);
+	//waitKey(0);
+
+
+	return edges;
+}
+
 /*
  * find_object_centroid
  *
@@ -213,8 +245,7 @@ void color_object_detector_init(void)
  * @param draw - whether or not to draw on image
  * @return number of pixels of image within the filter bounds.
  */
-
-//Function declaration of the finding the centre of the image
+//Function declaration of the finding the centre of the image - find orange pixels
 uint32_t find_object_centroid(struct image_t *img, int32_t* p_xc, int32_t* p_yc, bool draw,
                               uint8_t lum_min, uint8_t lum_max,
                               uint8_t cb_min, uint8_t cb_max,
@@ -226,7 +257,9 @@ uint32_t find_object_centroid(struct image_t *img, int32_t* p_xc, int32_t* p_yc,
   uint8_t *buffer = img->buf;
 
   // Go through all the pixels
+  //move along the y axis
   for (uint16_t y = 0; y < img->h; y++) {
+	  //move along the x axis
     for (uint16_t x = 0; x < img->w; x ++) {
       // Check if the color is inside the specified values
       uint8_t *yp, *up, *vp;
@@ -243,18 +276,15 @@ uint32_t find_object_centroid(struct image_t *img, int32_t* p_xc, int32_t* p_yc,
         vp = &buffer[y * 2 * img->w + 2 * x];      // V
         yp = &buffer[y * 2 * img->w + 2 * x + 1];  // Y2
       }
+      // Check between minimum and maximum values of the colors
       if ( (*yp >= lum_min) && (*yp <= lum_max) &&
            (*up >= cb_min ) && (*up <= cb_max ) &&
            (*vp >= cr_min ) && (*vp <= cr_max )) {
+    	//Increase the pixel count
         cnt ++;
+        //Add up aggregate of x and y values
         tot_x += x;
         tot_y += y;
-
-        // trek alleen de u van elkaar af.Gebruik signed integers. output is een plaatje met de randen
-
-        // implementeer een functie in die per vakdeel kijkt om te waar in het beeld de randen zijn
-
-        // Adviseer de beste heading (gecodeerd met de navigation team)
 
         if (draw){
           *yp = 255;  // make pixel brighter in image
@@ -262,10 +292,13 @@ uint32_t find_object_centroid(struct image_t *img, int32_t* p_xc, int32_t* p_yc,
       }
     }
   }
+  //Check if a color has been detected
   if (cnt > 0) {
+	//Centroid of the x and y coordinates: divide the total by the count
     *p_xc = (int32_t)roundf(tot_x / ((float) cnt) - img->w * 0.5f);
     *p_yc = (int32_t)roundf(img->h * 0.5f - tot_y / ((float) cnt));
   } else {
+	//Zero output in case no colored pixel has been detected
     *p_xc = 0;
     *p_yc = 0;
   }
@@ -280,18 +313,37 @@ void color_object_detector_periodic(void)
   static struct color_object_t local_filters[2];
   //Mutual exclusion with the navigator part. This file runs at 60Hz whereas the orange_avoider.c file runs at 500Hz.
   pthread_mutex_lock(&mutex);
+  //Copy memory
   memcpy(local_filters, global_filters, 2*sizeof(struct color_object_t));
   //Unlock the mutual exclusion
   pthread_mutex_unlock(&mutex);
 
+  /******Orange count*******/
+  //If the filter has been updated (computation is done)
   if(local_filters[0].updated){
+	//Send message with color count
     AbiSendMsgVISUAL_DETECTION(COLOR_OBJECT_DETECTION1_ID, local_filters[0].x_c, local_filters[0].y_c,
         0, 0, local_filters[0].color_count, 0);
     local_filters[0].updated = false;
   }
+
+  /******Floor count*******/
+  //If the filter has been updated (computation is done)
   if(local_filters[1].updated){
+	  // send message with color count
     AbiSendMsgVISUAL_DETECTION(COLOR_OBJECT_DETECTION2_ID, local_filters[1].x_c, local_filters[1].y_c,
         0, 0, local_filters[1].color_count, 1);
     local_filters[1].updated = false;
   }
+
+  /*******Edge count*******/
+  /*
+  if(local_filters[1].updated){
+	  // send message with color count
+    AbiSendMsgVISUAL_DETECTION(COLOR_OBJECT_DETECTION2_ID, local_filters[2].x_c, local_filters[2].y_c,
+        0, 0, local_filters[1].color_count, 2);
+    local_filters[2].updated = false;
+  }
+  */
 }
+
