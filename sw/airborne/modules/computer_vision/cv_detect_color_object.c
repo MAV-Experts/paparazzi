@@ -36,6 +36,8 @@
 #include <math.h>
 #include "pthread.h"
 
+//Optionally, include open cv here
+
 #define PRINT(string,...) fprintf(stderr, "[object_detector->%s()] " string,__FUNCTION__ , ##__VA_ARGS__)
 #if OBJECT_DETECTOR_VERBOSE
 #define VERBOSE_PRINT PRINT
@@ -98,6 +100,7 @@ static struct image_t *object_detector(struct image_t *img, uint8_t filter)
   uint8_t cr_min, cr_max;
   bool draw;
 
+  // filter can be in two stages
   switch (filter){
     case 1:
       lum_min = cod_lum_min1;
@@ -125,6 +128,7 @@ static struct image_t *object_detector(struct image_t *img, uint8_t filter)
 
   // Filter and find centroid
   uint32_t count = find_object_centroid(img, &x_c, &y_c, draw, lum_min, lum_max, cb_min, cb_max, cr_min, cr_max);
+  // Print object count en treshold, print image centre
   VERBOSE_PRINT("Color count %d: %u, threshold %u, x_c %d, y_c %d\n", camera, object_count, count_threshold, x_c, y_c);
   VERBOSE_PRINT("centroid %d: (%d, %d) r: %4.2f a: %4.2f\n", camera, x_c, y_c,
         hypotf(x_c, y_c) / hypotf(img->w * 0.5, img->h * 0.5), RadOfDeg(atan2f(y_c, x_c)));
@@ -138,7 +142,7 @@ static struct image_t *object_detector(struct image_t *img, uint8_t filter)
 
   return img;
 }
-
+//Create two object detector structures
 struct image_t *object_detector1(struct image_t *img, uint8_t camera_id);
 struct image_t *object_detector1(struct image_t *img, uint8_t camera_id __attribute__((unused)))
 {
@@ -151,10 +155,12 @@ struct image_t *object_detector2(struct image_t *img, uint8_t camera_id __attrib
   return object_detector(img, 2);
 }
 
+//initialization function
 void color_object_detector_init(void)
 {
   memset(global_filters, 0, 2*sizeof(struct color_object_t));
   pthread_mutex_init(&mutex, NULL);
+  //Initiate first object detector mode
 #ifdef COLOR_OBJECT_DETECTOR_CAMERA1
 #ifdef COLOR_OBJECT_DETECTOR_LUM_MIN1
   cod_lum_min1 = COLOR_OBJECT_DETECTOR_LUM_MIN1;
@@ -171,6 +177,7 @@ void color_object_detector_init(void)
   cv_add_to_device(&COLOR_OBJECT_DETECTOR_CAMERA1, object_detector1, COLOR_OBJECT_DETECTOR_FPS1, 0);
 #endif
 
+  //Initiate second object detector mode
 #ifdef COLOR_OBJECT_DETECTOR_CAMERA2
 #ifdef COLOR_OBJECT_DETECTOR_LUM_MIN2
   cod_lum_min2 = COLOR_OBJECT_DETECTOR_LUM_MIN2;
@@ -206,6 +213,8 @@ void color_object_detector_init(void)
  * @param draw - whether or not to draw on image
  * @return number of pixels of image within the filter bounds.
  */
+
+//Function declaration of the finding the centre of the image
 uint32_t find_object_centroid(struct image_t *img, int32_t* p_xc, int32_t* p_yc, bool draw,
                               uint8_t lum_min, uint8_t lum_max,
                               uint8_t cb_min, uint8_t cb_max,
@@ -240,6 +249,7 @@ uint32_t find_object_centroid(struct image_t *img, int32_t* p_xc, int32_t* p_yc,
         cnt ++;
         tot_x += x;
         tot_y += y;
+
         // trek alleen de u van elkaar af.Gebruik signed integers. output is een plaatje met de randen
 
         // implementeer een functie in die per vakdeel kijkt om te waar in het beeld de randen zijn
@@ -259,9 +269,12 @@ uint32_t find_object_centroid(struct image_t *img, int32_t* p_xc, int32_t* p_yc,
     *p_xc = 0;
     *p_yc = 0;
   }
+  //Return the pixel count
   return cnt;
 }
 
+
+//Periodic function of the object detector
 void color_object_detector_periodic(void)
 {
   static struct color_object_t local_filters[2];
