@@ -31,12 +31,15 @@
 #include "modules/core/abi.h"
 #include "std.h"
 
+
 #include <stdio.h>
 #include <stdbool.h>
 #include <math.h>
 #include "pthread.h"
 
 //Optionally, include open cv here
+#include "cv.h"
+using namespace cv;
 
 #define PRINT(string,...) fprintf(stderr, "[object_detector->%s()] " string,__FUNCTION__ , ##__VA_ARGS__)
 #if OBJECT_DETECTOR_VERBOSE
@@ -55,9 +58,10 @@ static pthread_mutex_t mutex;
 #endif
 
 //define namespaces
+/*
 using namespace cv;
 using namespace std;
-
+*/
 
 // Filter Settings
 uint8_t cod_lum_min1 = 0;
