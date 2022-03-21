@@ -30,6 +30,7 @@
 #include "modules/computer_vision/cv.h"
 #include "modules/core/abi.h"
 #include "std.h"
+#include "math.h"
 
 
 #include <stdio.h>
@@ -39,7 +40,6 @@
 
 //Optionally, include open cv here
 #include "cv.h"
-using namespace cv;
 
 #define PRINT(string,...) fprintf(stderr, "[object_detector->%s()] " string,__FUNCTION__ , ##__VA_ARGS__)
 #if OBJECT_DETECTOR_VERBOSE
@@ -56,12 +56,6 @@ static pthread_mutex_t mutex;
 #ifndef COLOR_OBJECT_DETECTOR_FPS2
 #define COLOR_OBJECT_DETECTOR_FPS2 0 ///< Default FPS (zero means run at camera fps)
 #endif
-
-//define namespaces
-/*
-using namespace cv;
-using namespace std;
-*/
 
 // Filter Settings
 uint8_t cod_lum_min1 = 0;
@@ -96,13 +90,6 @@ uint32_t find_object_centroid(struct image_t *img, int32_t* p_xc, int32_t* p_yc,
                               uint8_t cb_min, uint8_t cb_max,
                               uint8_t cr_min, uint8_t cr_max);
 
-int find_edges(struct image_t *img);
-/*
- * object_detector
- * @param img - input image to process
- * @param filter - which detection filter to process
- * @return img
- */
 static struct image_t *object_detector(struct image_t *img, uint8_t filter)
 {
   uint8_t lum_min, lum_max;
@@ -157,6 +144,7 @@ static struct image_t *object_detector(struct image_t *img, uint8_t filter)
 
   return img;
 }
+
 //Create an object detector with filter options 1
 struct image_t *object_detector1(struct image_t *img, uint8_t camera_id);
 struct image_t *object_detector1(struct image_t *img, uint8_t camera_id __attribute__((unused)))
@@ -211,26 +199,6 @@ void color_object_detector_init(void)
 #endif
 }
 
-/**Jonathan Dijkstra - edge detector using canny filter **/
-//Function find edges
-int find_edges(struct image_t *img)
-{
-	// Blur the image for noise reduction
-	Mat img_blur;
-	GaussianBlur(img, img_blur, Size(3,3), SigmaX=0, SigmaY=0);
-
-
-	// Canny edge detection
-	Mat edges;
-	Canny(img_blur, edges, 100, 200, 3, false);
-	// Display canny edge detected image
-	//imshow("Canny edge detection", edges);
-	//waitKey(0);
-
-
-	return edges;
-}
-
 /*
  * find_object_centroid
  *
@@ -258,15 +226,26 @@ uint32_t find_object_centroid(struct image_t *img, int32_t* p_xc, int32_t* p_yc,
   uint32_t cnt = 0;
   uint32_t tot_x = 0;
   uint32_t tot_y = 0;
-  uint8_t *buffer = img->buf;
+  uint32_t edge_count = 0;
+  uint8_t *we = img->buf;
+
+  uint8_t previous_Y = 0;
+  uint8_t edge_threshhold = 0;
 
   // Go through all the pixels
   //move along the y axis
   for (uint16_t y = 0; y < img->h; y++) {
-	  //move along the x axis
+	//for each row the previous illumation  0;
+	previous_Y = 0;
+
+	//move along the x axis
     for (uint16_t x = 0; x < img->w; x ++) {
+
+      /*******Color detection *********/
       // Check if the color is inside the specified values
       uint8_t *yp, *up, *vp;
+      uint8_t dY;
+
       if (x % 2 == 0) {
         // Even x
         up = &buffer[y * 2 * img->w + 2 * x];      // U
@@ -280,6 +259,7 @@ uint32_t find_object_centroid(struct image_t *img, int32_t* p_xc, int32_t* p_yc,
         vp = &buffer[y * 2 * img->w + 2 * x];      // V
         yp = &buffer[y * 2 * img->w + 2 * x + 1];  // Y2
       }
+
       // Check between minimum and maximum values of the colors
       if ( (*yp >= lum_min) && (*yp <= lum_max) &&
            (*up >= cb_min ) && (*up <= cb_max ) &&
@@ -292,10 +272,24 @@ uint32_t find_object_centroid(struct image_t *img, int32_t* p_xc, int32_t* p_yc,
 
         if (draw){
           *yp = 255;  // make pixel brighter in image
+
         }
+
+        /**Jonathan Dijkstra - edge detector using gaussian blur and difference in y components **/
+
+        /******Edge detection******/
+        //Calculate difference in pixel lumination
+        dY = yp - previous_Y;
+       if(dY <= edge_threshhold)
+        {
+        	edge_count ++;
+        }
+        previous_Y = yp;
       }
     }
   }
+
+
   //Check if a color has been detected
   if (cnt > 0) {
 	//Centroid of the x and y coordinates: divide the total by the count
@@ -350,4 +344,3 @@ void color_object_detector_periodic(void)
   }
   */
 }
-

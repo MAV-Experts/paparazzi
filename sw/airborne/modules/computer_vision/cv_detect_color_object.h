@@ -57,7 +57,7 @@ extern void color_object_detector_periodic(void);
 #endif /* COLOR_OBJECT_DETECTOR_CV_H */
 
 
-
+/*
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -69,5 +69,4 @@ int find_edges(struct image_t *img);
 #ifdef __cplusplus
 }
 #endif
-
-
+*/
