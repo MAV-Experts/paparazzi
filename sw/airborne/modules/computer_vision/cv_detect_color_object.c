@@ -278,14 +278,12 @@ uint32_t find_object_centroid(struct image_t *img, int32_t* p_xc, int32_t* p_yc,
 
         }
 
-        /**Jonathan Dijkstra - edge detector using gaussian blur and difference in y components
+        /**Jonathan Dijkstra - edge detector using and difference in y components
          * 1. Calculate difference in lumanination (Y value) between two adject pixels
          * 2. If the difference is above some threshold, count an edge
-         * 3. Keep track of the amount of edge detections in the x spectrum
+         * 3. Keep track of the amount of edge detections in the x
          *
          * **/
-
-
 
         //Calculate difference in pixel lumination
         dY = yp - previous_Y;
@@ -318,7 +316,6 @@ uint32_t find_object_centroid(struct image_t *img, int32_t* p_xc, int32_t* p_yc,
       }
     }
   }
-
 
   //Check if a color has been detected
   if (cnt > 0) {
