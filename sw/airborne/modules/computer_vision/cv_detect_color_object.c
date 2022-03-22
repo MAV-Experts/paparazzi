@@ -84,12 +84,26 @@ struct color_object_t {
 };
 struct color_object_t global_filters[2];
 
-// Function
-uint32_t find_object_centroid(struct image_t *img, int32_t* p_xc, int32_t* p_yc, bool draw,
+// struct that holds the data for the navigation function
+// for some reason it does not compile when declared in the header :(
+struct object_counts_t {
+   uint32_t orange;
+   uint32_t zone1;
+   uint32_t zone2;
+   uint32_t zone3;
+   uint32_t zone4;
+   uint32_t zone5;
+};
+
+
+// Function, changed the function declaration to accomodate the struct
+struct object_counts_t find_object_centroid(struct image_t *img, int32_t* p_xc, int32_t* p_yc, bool draw,
                               uint8_t lum_min, uint8_t lum_max,
                               uint8_t cb_min, uint8_t cb_max,
                               uint8_t cr_min, uint8_t cr_max);
 
+// a function that creates filter presets for the find object centroid function,
+// it just returns the img unchanged. 
 static struct image_t *object_detector(struct image_t *img, uint8_t filter)
 {
   uint8_t lum_min, lum_max;
@@ -123,8 +137,9 @@ static struct image_t *object_detector(struct image_t *img, uint8_t filter)
 
   int32_t x_c, y_c;
 
-  // Filter and find centroid
-  uint32_t count = find_object_centroid(img, &x_c, &y_c, draw, lum_min, lum_max, cb_min, cb_max, cr_min, cr_max);
+  // Filter and find centroid, changed count to a pointer so it expects the array.
+  struct object_counts_t count; // create the right return type for object centroid. 
+  count = find_object_centroid(img, &x_c, &y_c, draw, lum_min, lum_max, cb_min, cb_max, cr_min, cr_max);
 
   // Print object count en treshold, print image centre
   VERBOSE_PRINT("Color count %d: %u, threshold %u, x_c %d, y_c %d\n", camera, object_count, count_threshold, x_c, y_c);
@@ -134,7 +149,7 @@ static struct image_t *object_detector(struct image_t *img, uint8_t filter)
   //lock the mutual exclusion
   pthread_mutex_lock(&mutex);
   //color count
-  global_filters[filter-1].color_count = count;
+  global_filters[filter-1].color_count = count.orange; // store the orange value of the struct 
   global_filters[filter-1].x_c = x_c;
   global_filters[filter-1].y_c = y_c;
   //updated
@@ -218,7 +233,7 @@ void color_object_detector_init(void)
  * @return number of pixels of image within the filter bounds.
  */
 //Function declaration of the finding the centre of the image - find orange pixels
-uint32_t find_object_centroid(struct image_t *img, int32_t* p_xc, int32_t* p_yc, bool draw,
+struct object_counts_t find_object_centroid(struct image_t *img, int32_t* p_xc, int32_t* p_yc, bool draw,
                               uint8_t lum_min, uint8_t lum_max,
                               uint8_t cb_min, uint8_t cb_max,
                               uint8_t cr_min, uint8_t cr_max)
@@ -229,25 +244,23 @@ uint32_t find_object_centroid(struct image_t *img, int32_t* p_xc, int32_t* p_yc,
   uint8_t *we = img->buf;
   uint8_t *buffer = img->buf;
   uint8_t previous_Y = 0;
+  int32_t dY = 0; 
   uint8_t edge_threshhold = 0;
-  uint8_t zone_1_count = 0;
-  uint8_t zone_2_count = 0;
-  uint8_t zone_3_count = 0;
-  uint8_t zone_4_count = 0;
-  uint8_t zone_5_count = 0;
-  uint8_t bin_size = img->w / 5;
+  struct object_counts_t counts;          // the array that stores the # of orange pixels and zone counts. 
+  uint16_t bin_size = img->w / 5;
   // Go through all the pixels
-  //move along the y axis
+  // move along the y axis
   for (uint16_t y = 0; y < img->h; y++) {
 	//for each row the previous illumation  0;
 	previous_Y = 0;
-	uint8_t dY = 0;
+	dY = 0;
 	//move along the x axis
     for (uint16_t x = 0; x < img->w; x ++) {
 
       /*******Color detection *********/
       // Check if the color is inside the specified values
       uint8_t *yp, *up, *vp;
+      int32_t yp_cache;
 
       if (x % 2 == 0) {
         // Even x
@@ -273,9 +286,9 @@ uint32_t find_object_centroid(struct image_t *img, int32_t* p_xc, int32_t* p_yc,
         tot_x += x;
         tot_y += y;
 
+        yp_cache = *yp; // store the value of yp to use in the edge algorthm. 
         if (draw){
           *yp = 255;  // make pixel brighter in image
-
         }
 
         /**Jonathan Dijkstra - edge detector using and difference in y components
@@ -286,33 +299,33 @@ uint32_t find_object_centroid(struct image_t *img, int32_t* p_xc, int32_t* p_yc,
          * **/
 
         //Calculate difference in pixel lumination
-        dY = yp - previous_Y;
+        dY = abs(yp_cache - previous_Y);
         //Check if the difference above a certain treshhold
        if(dY >= edge_threshhold)
         {
         	// Find where the edge is
-    	   if(x >= 0 && x <= bin_size )
+    	   if(x <= bin_size ) //x >= 0 && 
     	   {
-    		  zone_1_count++;
+    		  counts.zone1++;
     	   }
     	   else if(x > bin_size && x<= (2 * bin_size))
     	   {
-    		   zone_2_count++;
+    		   counts.zone2++;
     	   }
     	   else if(x > (2 * bin_size) && x<= (3 * bin_size))
     	   {
-    		   zone_3_count++;
+    		   counts.zone3++;
     	   }
     	   else if(x > (3 * bin_size) && x<= (4 * bin_size))
     	   {
-    		   zone_4_count++;
+    		   counts.zone4++;
     	   }
     	   else
     	   {
-    		   zone_5_count++;
+    		   counts.zone5++;
     	   }
         }
-        previous_Y = yp;
+        previous_Y = yp_cache;
       }
     }
   }
@@ -327,8 +340,10 @@ uint32_t find_object_centroid(struct image_t *img, int32_t* p_xc, int32_t* p_yc,
     *p_xc = 0;
     *p_yc = 0;
   }
+
   //Return the pixel count
-  return cnt;
+  counts.orange = cnt;
+  return counts;
 }
 
 
@@ -362,12 +377,12 @@ void color_object_detector_periodic(void)
   }
 
   /*******Edge count*******/
-  /*
+  
   if(local_filters[1].updated){
 	  // send message with color count
-    AbiSendMsgVISUAL_DETECTION(COLOR_OBJECT_DETECTION2_ID, local_filters[2].x_c, local_filters[2].y_c,
-        0, 0, local_filters[1].color_count, 2);
+    AbiSendMsgVISUAL_EdgeDETECTION(EDGE_OBJECT_DETECTION3_ID, 
+    count.zone1, count.zone2, count.zone3, count.zone4, count.zone5);
     local_filters[2].updated = false;
   }
-  */
+  
 }
