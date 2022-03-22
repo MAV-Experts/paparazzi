@@ -80,12 +80,13 @@ struct color_object_t {
   int32_t x_c;
   int32_t y_c;
   uint32_t color_count;
+  uint32_t edge_count[3];
   bool updated;
 };
 struct color_object_t global_filters[2];
 
 // Function
-uint32_t find_object_centroid(struct image_t *img, int32_t* p_xc, int32_t* p_yc, bool draw,
+uint32_t* find_object_centroid(struct image_t *img, int32_t* p_xc, int32_t* p_yc, bool draw,
                               uint8_t lum_min, uint8_t lum_max,
                               uint8_t cb_min, uint8_t cb_max,
                               uint8_t cr_min, uint8_t cr_max);
@@ -122,9 +123,14 @@ static struct image_t *object_detector(struct image_t *img, uint8_t filter)
   };
 
   int32_t x_c, y_c;
-
+  uint32_t function_output[4];
   // Filter and find centroid
-  uint32_t count = find_object_centroid(img, &x_c, &y_c, draw, lum_min, lum_max, cb_min, cb_max, cr_min, cr_max);
+  function_output = find_object_centroid(img, &x_c, &y_c, draw, lum_min, lum_max, cb_min, cb_max, cr_min, cr_max);
+
+  uint32_t count = function_output[0];
+  uint32_t edge_count[0] = function_output[1];
+  uint32_t edge_count[1] = function_output[2];
+  uint32_t edge_count[2] = function_output[3];
 
   // Print object count en treshold, print image centre
   VERBOSE_PRINT("Color count %d: %u, threshold %u, x_c %d, y_c %d\n", camera, object_count, count_threshold, x_c, y_c);
@@ -137,6 +143,8 @@ static struct image_t *object_detector(struct image_t *img, uint8_t filter)
   global_filters[filter-1].color_count = count;
   global_filters[filter-1].x_c = x_c;
   global_filters[filter-1].y_c = y_c;
+  //edge count
+  global_filters[filter-1].edge_count = edge_count;
   //updated
   global_filters[filter-1].updated = true;
   //unlock the mutual exclusion
@@ -228,26 +236,29 @@ uint32_t find_object_centroid(struct image_t *img, int32_t* p_xc, int32_t* p_yc,
   uint32_t tot_y = 0;
   uint8_t *we = img->buf;
   uint8_t *buffer = img->buf;
-  uint8_t previous_Y = 0;
-  uint8_t edge_threshhold = 0;
-  uint8_t zone_1_count = 0;
-  uint8_t zone_2_count = 0;
-  uint8_t zone_3_count = 0;
-  uint8_t zone_4_count = 0;
-  uint8_t zone_5_count = 0;
-  uint8_t bin_size = img->w / 5;
+  int32_t previous_Y = 0;
+  int32_t dY = 0;
+
+  //Edge threshold
+  uint8_t edge_threshhold = 5;
+
+  uint32_t edge_count[3];
+  uint32_t function_output[4];
+  uint8_t yp_catch;
+  uint8_t bin_size = img->w / 3;
+
   // Go through all the pixels
   //move along the y axis
   for (uint16_t y = 0; y < img->h; y++) {
 	//for each row the previous illumation  0;
 	previous_Y = 0;
-	uint8_t dY = 0;
+	dY = 0;
 	//move along the x axis
     for (uint16_t x = 0; x < img->w; x ++) {
 
       /*******Color detection *********/
       // Check if the color is inside the specified values
-      uint8_t *yp, *up, *vp;
+      int8_t *yp, *up, *vp;
 
       if (x % 2 == 0) {
         // Even x
@@ -273,43 +284,37 @@ uint32_t find_object_centroid(struct image_t *img, int32_t* p_xc, int32_t* p_yc,
         tot_x += x;
         tot_y += y;
 
+        //Catch the y value of the pixel in case the draw condition is met
+		yp_catch = *yp;
+
         if (draw){
           *yp = 255;  // make pixel brighter in image
-
         }
 
         /**Jonathan Dijkstra - edge detector using and difference in y components
-         * 1. Calculate difference in lumanination (Y value) between two adject pixels
+         * 1. Calculate difference in lumanination (Y value) between two adjecent pixels
          * 2. If the difference is above some threshold, count an edge
          * 3. Keep track of the amount of edge detections in the x
          *
          * **/
 
         //Calculate difference in pixel lumination
-        dY = yp - previous_Y;
+        dY = yp_catch- previous_Y;
         //Check if the difference above a certain treshhold
        if(dY >= edge_threshhold)
         {
-        	// Find where the edge is
+        	// Find where the edge is three zones
     	   if(x >= 0 && x <= bin_size )
     	   {
-    		  zone_1_count++;
+    		   edge_count[0]++;
     	   }
     	   else if(x > bin_size && x<= (2 * bin_size))
     	   {
-    		   zone_2_count++;
-    	   }
-    	   else if(x > (2 * bin_size) && x<= (3 * bin_size))
-    	   {
-    		   zone_3_count++;
-    	   }
-    	   else if(x > (3 * bin_size) && x<= (4 * bin_size))
-    	   {
-    		   zone_4_count++;
+    		   edge_count[1]++;
     	   }
     	   else
     	   {
-    		   zone_5_count++;
+    		   edge_count[2]++;
     	   }
         }
         previous_Y = yp;
@@ -327,8 +332,15 @@ uint32_t find_object_centroid(struct image_t *img, int32_t* p_xc, int32_t* p_yc,
     *p_xc = 0;
     *p_yc = 0;
   }
-  //Return the pixel count
-  return cnt;
+
+
+  //Return the pixel count and edge count
+  function_output[0] = cnt;
+  function_output[1] = edge_count[0];
+  function_output[2] = edge_count[1];
+  function_output[3] = edge_count[2];
+
+  return &function_output;
 }
 
 
