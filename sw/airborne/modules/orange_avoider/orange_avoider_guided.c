@@ -52,10 +52,13 @@ enum navigation_state_t {
 
 // define settings
 float oag_color_count_frac = 0.18f;       // obstacle detection threshold as a fraction of total of image
-float oag_floor_count_frac = 0.05f;       // floor detection threshold as a fraction of total of image
+float oag_floor_count_frac = 0.1f;       // floor detection threshold as a fraction of total of image
 float oag_max_speed = 1.0f;               // max flight speed [m/s]
-float oag_heading_rate = RadOfDeg(40.f);  // heading change setpoint for avoidance [rad/s]
-float obst_count_frac = 0.18f;
+float oag_heading_rate = RadOfDeg(20.f);  // heading change setpoint for avoidance [rad/s]
+float obst_count_frac = 0.1f;
+int edges_left = 1000;
+int edges_center = 100;
+int edges_right = 500;
 
 // define and initialise global variables
 int32_t obstacle_count = 0;
@@ -64,12 +67,15 @@ int32_t color_count = 0;                // orange color count from color filter 
 int32_t floor_count = 0;                // green color count from color filter for floor detection
 int32_t floor_centroid = 0;             // floor detector centroid in y direction (along the horizon)
 float avoidance_heading_direction = 0;  // heading change direction for avoidance [rad/s]
+float avoidance_heading_direction_FLOOR =0;
 int16_t obstacle_free_confidence = 0;   // a measure of how certain we are that the way ahead if safe.
 float left_pix = 0;                     // number of ones in left side of matrix
 float right_pix = 0;                    // number of ones in right side of matrix
-int32_t edge_number[3] = {34,12,1};         // Matrix of obstacle detection
+int32_t edge_number[3] = {0, 0, 0};
+// int edge_number[3] = {edges_left, edges_center, edges_right};         // Matrix of obstacle detection
 int n =  sizeof edge_number / sizeof edge_number[0];
-uint8_t chooseRandomIncrementAvoidance(int32_t obstacle_px[], int n);
+uint8_t chooseIncrementAvoidance(int32_t obstacle_px[], int n);
+uint8_t chooseRandomIncrementAvoidance(void);
 
 
 
@@ -119,7 +125,8 @@ void orange_avoider_guided_init(void)
 {
   // Initialise random values
   srand(time(NULL));
-  chooseRandomIncrementAvoidance(edge_number, n);
+  chooseIncrementAvoidance(edge_number, n);
+  chooseRandomIncrementAvoidance();
 
   // bind our colorfilter callbacks to receive the color filter outputs
   AbiBindMsgVISUAL_DETECTION(ORANGE_AVOIDER_VISUAL_DETECTION_ID, &color_detection_ev, color_detection_cb);
@@ -132,7 +139,10 @@ void orange_avoider_guided_init(void)
  */
 void orange_avoider_guided_periodic(void)
 {
-  obstacle_count=edge_number[n/2+1];
+  edge_number[0] = edges_left;
+  edge_number[1] = edges_center;
+  edge_number[2] = edges_right;
+  obstacle_count=edge_number[1];
   // Only run the mudule if we are in the correct flight mode
   if (guidance_h.mode != GUIDANCE_H_MODE_GUIDED) {
     navigation_state = SEARCH_FOR_SAFE_HEADING;
@@ -141,11 +151,12 @@ void orange_avoider_guided_periodic(void)
   }
 
   // compute current color thresholds
-  int32_t obstacle_count_threshold = obst_count_frac * front_camera.output_size.w * front_camera.output_size.h;
+  int32_t obstacle_count_threshold = obst_count_frac * front_camera.output_size.w * front_camera.output_size.h / 3;
   int32_t color_count_threshold = oag_color_count_frac * front_camera.output_size.w * front_camera.output_size.h;
   int32_t floor_count_threshold = oag_floor_count_frac * front_camera.output_size.w * front_camera.output_size.h;
   float floor_centroid_frac = floor_centroid / (float)front_camera.output_size.h / 2.f;
 
+  VERBOSE_PRINT("Edge_count: %d  threshold: %d state: %d \n", obstacle_count, obstacle_count_threshold, navigation_state);
   // VERBOSE_PRINT("Color_count: %d  threshold: %d state: %d \n", color_count, color_count_threshold, navigation_state);
   // VERBOSE_PRINT("Floor count: %d, threshold: %d\n", floor_count, floor_count_threshold);
   // VERBOSE_PRINT("Floor centroid: %f\n", floor_centroid_frac);
@@ -158,7 +169,7 @@ void orange_avoider_guided_periodic(void)
   } else {
     obstacle_free_confidence -= 2;  // be more cautious with positive obstacle detections
   }
-
+ VERBOSE_PRINT("Obstacle_count: %d \n", obstacle_free_confidence);
   // bound obstacle_free_confidence
   Bound(obstacle_free_confidence, 0, max_trajectory_confidence);
 
@@ -180,7 +191,8 @@ void orange_avoider_guided_periodic(void)
       guidance_h_set_guided_body_vel(0, 0);
 
       // randomly select new search direction
-      chooseRandomIncrementAvoidance(edge_number, n);
+      chooseIncrementAvoidance(edge_number, n);
+      VERBOSE_PRINT("Set avoidance increment to: %f\n", avoidance_heading_direction * oag_heading_rate);
 
       navigation_state = SEARCH_FOR_SAFE_HEADING;
 
@@ -197,9 +209,9 @@ void orange_avoider_guided_periodic(void)
     case OUT_OF_BOUNDS:
       // stop
       guidance_h_set_guided_body_vel(0, 0);
-
+      chooseRandomIncrementAvoidance();
       // start turn back into arena
-      guidance_h_set_guided_heading_rate(avoidance_heading_direction * RadOfDeg(15));
+      guidance_h_set_guided_heading_rate(avoidance_heading_direction_FLOOR * RadOfDeg(15));
 
       navigation_state = REENTER_ARENA;
 
@@ -226,7 +238,7 @@ void orange_avoider_guided_periodic(void)
 /*
  * Sets the variable 'incrementForAvoidance' randomly positive/negative
  */
-uint8_t chooseRandomIncrementAvoidance(int32_t edge_number[], int n)
+uint8_t chooseIncrementAvoidance(int32_t edge_number[], int n)
 {
   int  ind = 0,i,min = 1000000;
     for (i = 0; i < n; ++i) {
@@ -239,14 +251,14 @@ uint8_t chooseRandomIncrementAvoidance(int32_t edge_number[], int n)
  printf("Index: %i \n",ind);
  printf("N: %i \n",n);
   if (ind == n-1) {
-    avoidance_heading_direction = -1.5f;
+    avoidance_heading_direction = 1.f;
     printf("%lf \n",avoidance_heading_direction);
 
-    //VERBOSE_PRINT("Set avoidance increment to: %f\n", avoidance_heading_direction * oag_heading_rate);
+    VERBOSE_PRINT("Set avoidance increment to: %f\n", avoidance_heading_direction * oag_heading_rate);
   } else if (ind == 0){
-    avoidance_heading_direction = 1.5f;
+    avoidance_heading_direction = -1.f;
     printf("%lf \n",avoidance_heading_direction);
-    //VERBOSE_PRINT("Set avoidance increment to: %f\n", avoidance_heading_direction * oag_heading_rate);
+    VERBOSE_PRINT("Set avoidance increment to: %f\n", avoidance_heading_direction * oag_heading_rate);
   /*} else if (ind == 1){
     avoidance_heading_direction = -1.f;
     printf("%i",avoidance_heading_direction);
@@ -258,7 +270,20 @@ uint8_t chooseRandomIncrementAvoidance(int32_t edge_number[], int n)
   }else {
     avoidance_heading_direction = 6.f;
     printf("%lf \n",avoidance_heading_direction);
-    //VERBOSE_PRINT("Set avoidance increment to: %f\n", avoidance_heading_direction * oag_heading_rate);
+    VERBOSE_PRINT("Set avoidance increment to: %f\n", avoidance_heading_direction * oag_heading_rate);
+  }
+  return false;
+}
+
+uint8_t chooseRandomIncrementAvoidance(void)
+{
+  // Randomly choose CW or CCW avoiding direction
+  if (rand() % 2 == 0) {
+    avoidance_heading_direction_FLOOR = 1.f;
+    VERBOSE_PRINT("Set avoidance increment to: %f\n", avoidance_heading_direction_FLOOR * oag_heading_rate);
+  } else {
+    avoidance_heading_direction_FLOOR = -1.f;
+    VERBOSE_PRINT("Set avoidance increment to: %f\n", avoidance_heading_direction_FLOOR * oag_heading_rate);
   }
   return false;
 }
