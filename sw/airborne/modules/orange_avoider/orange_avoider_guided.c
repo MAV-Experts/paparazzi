@@ -67,6 +67,7 @@ float avoidance_heading_direction = 0;  // heading change direction for avoidanc
 int16_t obstacle_free_confidence = 0;   // a measure of how certain we are that the way ahead if safe.
 float left_pix = 0;                     // number of ones in left side of matrix
 float right_pix = 0;                    // number of ones in right side of matrix
+
 int32_t edge_number[3] = {34,12,1};         // Matrix of obstacle detection
 int n =  sizeof edge_number / sizeof edge_number[0];
 uint8_t chooseRandomIncrementAvoidance(int32_t obstacle_px[], int n);
