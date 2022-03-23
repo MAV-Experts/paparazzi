@@ -211,6 +211,18 @@
       <field name="data" type="uint8_t *">Pointer to an array of bytes, or any structure depending on the sender and the type of data</field>
     </message>
 
+    <message name="ZONE_COUNTS" id="30">
+      <field name="white_zone1"     type="int32_t">1th zone from the left white count</field>
+      <field name="white_zone2"     type="int32_t">2th zone from the left white pixel count</field>
+      <field name="white_zone3"     type="int32_t">3th zone from the left white pixel count</field>
+      <field name="orange_zone1"    type="int32_t">1th zone from the left orange pixel count</field>
+      <field name="orange_zone2"    type="int32_t">2th zone from the left orange pixel count</field>
+      <field name="orange_zone3"    type="int32_t">3th zone from the left orange pixel count</field>
+      <field name="edge_zone1"      type="int32_t">1th zone from the left edge pixel count</field>
+      <field name="edge_zone2"      type="int32_t">2th zone from the left edge pixel count</field>
+      <field name="edge_zone3"      type="int32_t">3th zone from the left edge pixel count</field>
+    </message>
+
   </msg_class>
 
 </protocol>

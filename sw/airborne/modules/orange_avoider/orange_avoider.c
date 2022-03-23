@@ -4,6 +4,7 @@
  * This file is part of paparazzi
  *
  */
+
 /**
  * @file "modules/orange_avoider/orange_avoider.c"
  * @author Roland Meertens
@@ -92,6 +93,7 @@ void orange_avoider_init(void)
 
   // bind our colorfilter callbacks to receive the color filter outputs
   AbiBindMsgVISUAL_DETECTION(ORANGE_AVOIDER_VISUAL_DETECTION_ID, &color_detection_ev, color_detection_cb);
+  // add edge filter ...
 }
 
 /*
