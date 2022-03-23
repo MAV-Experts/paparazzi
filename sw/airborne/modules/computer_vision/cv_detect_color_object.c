@@ -312,7 +312,7 @@ struct object_counts_t find_object_centroid(struct image_t *img, int32_t* p_xc, 
            (*vp >= cr_min ) && (*vp <= cr_max )) 
            {
     	      //Increase the pixel count
-            cnt ++;
+            counts.orange_zone1++;
             //Add up aggregate of x and y values
             tot_x += x;
             tot_y += y;
@@ -376,7 +376,6 @@ struct object_counts_t find_object_centroid(struct image_t *img, int32_t* p_xc, 
   }
 
   //Return the pixel count
-  counts.orange = cnt;
   return counts;
 }
 
