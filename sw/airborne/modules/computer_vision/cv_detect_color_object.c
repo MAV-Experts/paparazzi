@@ -380,8 +380,8 @@ void color_object_detector_periodic(void)
   
   if(local_filters[1].updated){
 	  // send message with color count
-    AbiSendMsgVISUAL_EdgeDETECTION(EDGE_OBJECT_DETECTION3_ID, 
-    count.zone1, count.zone2, count.zone3, count.zone4, count.zone5);
+    AbiSendMsgZONE_COUNTS(ZONE_COUNTS_ID, 
+    count.orange, count.zone1, count.zone2, count.zone3, count.zone4, count.zone5);
     local_filters[2].updated = false;
   }
   
