@@ -212,12 +212,15 @@
     </message>
 
     <message name="ZONE_COUNTS" id="30">
-      <field name="zone1"       type="int32_t">1th zone from the left object pixel count</field>
-      <field name="zone2"       type="int32_t">2th zone from the left object pixel count</field>
-      <field name="zone3"       type="int32_t">3th zone from the left object pixel count</field>
-      <field name="zone4"       type="int32_t">4th zone from the left object pixel count</field>
-      <field name="zone5"       type="int32_t">5th zone from the left object pixel count</field>
-      <field name="zone6"       type="int32_t">6th zone from the left object pixel count</field>
+      <field name="white_zone1"     type="int32_t">1th zone from the left white count</field>
+      <field name="white_zone2"     type="int32_t">2th zone from the left white pixel count</field>
+      <field name="white_zone3"     type="int32_t">3th zone from the left white pixel count</field>
+      <field name="orange_zone1"    type="int32_t">1th zone from the left orange pixel count</field>
+      <field name="orange_zone2"    type="int32_t">2th zone from the left orange pixel count</field>
+      <field name="orange_zone3"    type="int32_t">3th zone from the left orange pixel count</field>
+      <field name="edge_zone1"      type="int32_t">1th zone from the left edge pixel count</field>
+      <field name="edge_zone2"      type="int32_t">2th zone from the left edge pixel count</field>
+      <field name="edge_zone3"      type="int32_t">3th zone from the left edge pixel count</field>
     </message>
 
   </msg_class>

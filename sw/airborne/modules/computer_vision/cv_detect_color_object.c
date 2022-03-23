@@ -88,14 +88,19 @@ struct color_object_t global_filters[2];
 // struct that holds the data for the navigation function
 // for some reason it does not compile when declared in the header :(
 struct object_counts_t {
-   uint32_t orange;
-   uint32_t zone1;
-   uint32_t zone2;
-   uint32_t zone3;
-   uint32_t zone4;
-   uint32_t zone5;
+   uint32_t white_zone1;
+   uint32_t white_zone2;
+   uint32_t white_zone3;
+   uint32_t orange_zone1;
+   uint32_t orange_zone2;
+   uint32_t orange_zone3;
+   uint32_t edge_zone1;
+   uint32_t edge_zone2;
+   uint32_t edge_zone3;
+   bool updated; 
 };
-
+// creating the variable where the counts are stored after the object detector function found them
+struct object_counts_t global_zone_counts;
 
 // Function, changed the function declaration to accomodate the struct
 struct object_counts_t find_object_centroid(struct image_t *img, int32_t* p_xc, int32_t* p_yc, bool draw,
@@ -105,6 +110,7 @@ struct object_counts_t find_object_centroid(struct image_t *img, int32_t* p_xc, 
 
 // a function that creates filter presets for the find object centroid function,
 // it just returns the img unchanged. 
+// it also calls the find_object_centroid function and stores the output in the global variables 
 static struct image_t *object_detector(struct image_t *img, uint8_t filter)
 {
   uint8_t lum_min, lum_max;
@@ -138,25 +144,40 @@ static struct image_t *object_detector(struct image_t *img, uint8_t filter)
 
   int32_t x_c, y_c;
 
-  // Filter and find centroid, changed count to a pointer so it expects the array.
-  struct object_counts_t count; // create the right return type for object centroid. 
-  count = find_object_centroid(img, &x_c, &y_c, draw, lum_min, lum_max, cb_min, cb_max, cr_min, cr_max);
+  // Filter and find centroid, declare a struct data type count to store values from the find_object_centroid function
+  // stores the detected counts in the struct
+  struct object_counts_t detected_counts;
+  detected_counts = find_object_centroid(img, &x_c, &y_c, draw, lum_min, lum_max, cb_min, cb_max, cr_min, cr_max);
 
   // Print object count en treshold, print image centre
   VERBOSE_PRINT("Color count %d: %u, threshold %u, x_c %d, y_c %d\n", camera, object_count, count_threshold, x_c, y_c);
   VERBOSE_PRINT("centroid %d: (%d, %d) r: %4.2f a: %4.2f\n", camera, x_c, y_c,
         hypotf(x_c, y_c) / hypotf(img->w * 0.5, img->h * 0.5), RadOfDeg(atan2f(y_c, x_c)));
 
+  // storing the results from find_object in the global variables. 
   //lock the mutual exclusion
   pthread_mutex_lock(&mutex);
   //color count
-  global_filters[filter-1].color_count = count.orange; // store the orange value of the struct 
+  global_filters[filter-1].color_count = detected_counts.orange_zone1; // store the orange value of the struct this is incorrect and is just here to make it compile
   global_filters[filter-1].x_c = x_c;
   global_filters[filter-1].y_c = y_c;
-  //edge count
-  global_filters[filter-1].edge_count = edge_count;
   //updated
   global_filters[filter-1].updated = true;
+  
+  // store the white counts in the right zones
+  global_zone_counts.white_zone1 = detected_counts.white_zone1;
+  global_zone_counts.white_zone2 = detected_counts.white_zone2;
+  global_zone_counts.white_zone3 = detected_counts.white_zone3;
+  // store the orange counts in the right zones
+  global_zone_counts.orange_zone1 = detected_counts.orange_zone1;
+  global_zone_counts.orange_zone1 = detected_counts.orange_zone2;
+  global_zone_counts.orange_zone1 = detected_counts.orange_zone3;
+  // store the edge counts in the right zones
+  global_zone_counts.edge_zone1 = detected_counts.edge_zone1;
+  global_zone_counts.edge_zone1 = detected_counts.edge_zone2;
+  global_zone_counts.edge_zone1 = detected_counts.edge_zone3;
+  // tell the periodic function that there is new information to send. 
+  global_zone_counts.updated = true;
   //unlock the mutual exclusion
   pthread_mutex_unlock(&mutex);
 
@@ -164,6 +185,7 @@ static struct image_t *object_detector(struct image_t *img, uint8_t filter)
 }
 
 //Create an object detector with filter options 1
+// it calls the function implemented above wiht filter option 1 filled in.
 struct image_t *object_detector1(struct image_t *img, uint8_t camera_id);
 struct image_t *object_detector1(struct image_t *img, uint8_t camera_id __attribute__((unused)))
 {
@@ -180,8 +202,13 @@ struct image_t *object_detector2(struct image_t *img, uint8_t camera_id __attrib
 //initialization function
 void color_object_detector_init(void)
 {
+  // reserving memory for the global struct to store the data for the object detection
   memset(global_filters, 0, 2*sizeof(struct color_object_t));
-  pthread_mutex_init(&mutex, NULL);
+  memset(&global_zone_counts, 0, sizeof(struct object_counts_t)); 
+
+  pthread_mutex_init(&mutex, NULL); // do not know what it does. 
+  
+  // settings for the color detecting modes ignoring it for now.
   //Initiate first object detector mode
 #ifdef COLOR_OBJECT_DETECTOR_CAMERA1
 #ifdef COLOR_OBJECT_DETECTOR_LUM_MIN1
@@ -250,7 +277,7 @@ struct object_counts_t find_object_centroid(struct image_t *img, int32_t* p_xc, 
   int32_t dY = 0; 
   uint8_t edge_threshhold = 0;
   struct object_counts_t counts;          // the array that stores the # of orange pixels and zone counts. 
-  uint16_t bin_size = img->w / 5;
+  uint16_t bin_size = img->w / 3;     // # of bins/zones in the image set to 3. 
   // Go through all the pixels
   // move along the y axis
   for (uint16_t y = 0; y < img->h; y++) {
@@ -282,13 +309,15 @@ struct object_counts_t find_object_centroid(struct image_t *img, int32_t* p_xc, 
       // Check between minimum and maximum values of the colors
       if ( (*yp >= lum_min) && (*yp <= lum_max) &&
            (*up >= cb_min ) && (*up <= cb_max ) &&
-           (*vp >= cr_min ) && (*vp <= cr_max )) {
-    	//Increase the pixel count
-        cnt ++;
-        //Add up aggregate of x and y values
-        tot_x += x;
-        tot_y += y;
-
+           (*vp >= cr_min ) && (*vp <= cr_max )) 
+           {
+    	      //Increase the pixel count
+            cnt ++;
+            //Add up aggregate of x and y values
+            tot_x += x;
+            tot_y += y;
+           }
+        
         yp_cache = *yp; // store the value of yp to use in the edge algorthm. 
         if (draw){
           *yp = 255;  // make pixel brighter in image
@@ -309,16 +338,18 @@ struct object_counts_t find_object_centroid(struct image_t *img, int32_t* p_xc, 
         	// Find where the edge is
     	   if(x <= bin_size ) //x >= 0 && 
     	   {
-    		  counts.zone1++;
+    		  counts.edge_zone1++;
     	   }
     	   else if(x > bin_size && x<= (2 * bin_size))
     	   {
-    		   counts.zone2++;
+    		   counts.edge_zone2++;
     	   }
     	   else if(x > (2 * bin_size) && x<= (3 * bin_size))
     	   {
-    		   counts.zone3++;
+    		   counts.edge_zone3++;
     	   }
+         // block that does two extra bins. which are not used
+         /*
     	   else if(x > (3 * bin_size) && x<= (4 * bin_size))
     	   {
     		   counts.zone4++;
@@ -327,9 +358,9 @@ struct object_counts_t find_object_centroid(struct image_t *img, int32_t* p_xc, 
     	   {
     		   counts.zone5++;
     	   }
+         */
         }
         previous_Y = yp_cache;
-      }
     }
   }
 
@@ -354,10 +385,13 @@ struct object_counts_t find_object_centroid(struct image_t *img, int32_t* p_xc, 
 void color_object_detector_periodic(void)
 {
   static struct color_object_t local_filters[2];
+  struct object_counts_t local_zone_counts;
+
   //Mutual exclusion with the navigator part. This file runs at 60Hz whereas the orange_avoider.c file runs at 500Hz.
   pthread_mutex_lock(&mutex);
-  //Copy memory
+  //Copy memory to the local filter from the global filters.
   memcpy(local_filters, global_filters, 2*sizeof(struct color_object_t));
+  memcpy(&local_zone_counts, &global_zone_counts, sizeof(struct object_counts_t));
   //Unlock the mutual exclusion
   pthread_mutex_unlock(&mutex);
 
@@ -381,11 +415,14 @@ void color_object_detector_periodic(void)
 
   /*******Edge count*******/
   
-  if(local_filters[1].updated){
-	  // send message with color count
+  if(local_zone_counts.updated){
+	  // send message with zone counts
     AbiSendMsgZONE_COUNTS(ZONE_COUNTS_ID, 
-    count.orange, count.zone1, count.zone2, count.zone3, count.zone4, count.zone5);
-    local_filters[2].updated = false;
+    local_zone_counts.white_zone1, local_zone_counts.white_zone2, local_zone_counts.white_zone3, 
+    local_zone_counts.orange_zone1, local_zone_counts.orange_zone2, local_zone_counts.orange_zone3,
+    local_zone_counts.edge_zone1, local_zone_counts.edge_zone2, local_zone_counts.edge_zone3,);
+    
+    local_zone_counts.updated = false; // tell the programm that the message is send.
   }
   
 }
