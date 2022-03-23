@@ -419,7 +419,7 @@ void color_object_detector_periodic(void)
     AbiSendMsgZONE_COUNTS(ZONE_COUNTS_ID, 
     local_zone_counts.white_zone1, local_zone_counts.white_zone2, local_zone_counts.white_zone3, 
     local_zone_counts.orange_zone1, local_zone_counts.orange_zone2, local_zone_counts.orange_zone3,
-    local_zone_counts.edge_zone1, local_zone_counts.edge_zone2, local_zone_counts.edge_zone3,);
+    local_zone_counts.edge_zone1, local_zone_counts.edge_zone2, local_zone_counts.edge_zone3);
     
     local_zone_counts.updated = false; // tell the programm that the message is send.
   }
