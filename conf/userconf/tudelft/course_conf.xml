@@ -2,12 +2,28 @@
   <aircraft
    name="autonomous_mav"
    ac_id="44"
+<<<<<<< HEAD
+<<<<<<< HEAD
    airframe="airframes/tudelft/autonomous_mav.xml"
+=======
+   airframe="airframes/modules/autonomous_mav.xml"
+>>>>>>> edge_detection_v2
+=======
+   airframe="airframes/tudelft/autonomous_mav.xml"
+>>>>>>> c15a9d1eaef5b3fa69725d6e489dd33874c9304a
    radio="radios/dummy.xml"
    telemetry="telemetry/default_rotorcraft.xml"
    flight_plan="flight_plans/tudelft/course_orangeavoid_cyberzoo.xml"
    settings="settings/rotorcraft_basic.xml"
+<<<<<<< HEAD
+<<<<<<< HEAD
+   settings_modules="modules/ahrs_int_cmpl_quat.xml modules/bebop_cam.xml modules/cv_detect_color_object.xml modules/gps.xml modules/guidance_rotorcraft.xml modules/imu_common.xml modules/ins_extended.xml modules/nav_basic_rotorcraft.xml modules/stabilization_indi_simple.xml modules/video_capture.xml modules/video_rtp_stream.xml"
+=======
    settings_modules="modules/ahrs_int_cmpl_quat.xml modules/bebop_cam.xml modules/cv_detect_color_object.xml modules/gps.xml modules/guidance_rotorcraft.xml modules/imu_common.xml modules/ins_extended.xml modules/nav_basic_rotorcraft.xml modules/autonomous_mav.xml modules/stabilization_indi_simple.xml modules/video_capture.xml modules/video_rtp_stream.xml"
+>>>>>>> edge_detection_v2
+=======
+   settings_modules="modules/ahrs_int_cmpl_quat.xml modules/bebop_cam.xml modules/cv_detect_color_object.xml modules/gps.xml modules/guidance_rotorcraft.xml modules/imu_common.xml modules/ins_extended.xml modules/nav_basic_rotorcraft.xml modules/autonomous_mav.xml modules/stabilization_indi_simple.xml modules/video_capture.xml modules/video_rtp_stream.xml"
+>>>>>>> c15a9d1eaef5b3fa69725d6e489dd33874c9304a
    gui_color="white"
    release="951019e34be0464cee1171a083947981c4b8c55d"
   />
@@ -37,6 +53,14 @@
    release="951019e34be0464cee1171a083947981c4b8c55d"
   />
   <aircraft
+<<<<<<< HEAD
+<<<<<<< HEAD
+   name="no_green"
+   ac_id="45"
+   airframe="airframes/tudelft/bebop_course_nogreen.xml"
+=======
+=======
+>>>>>>> c15a9d1eaef5b3fa69725d6e489dd33874c9304a
    name="exercise"
    ac_id="99"
    airframe="airframes/tudelft/bebop_mav_course_exercise.xml"
@@ -52,6 +76,10 @@
    name="navigation_v0"
    ac_id="98"
    airframe="airframes/tudelft/bebop_course_orangeavoid.xml"
+<<<<<<< HEAD
+>>>>>>> edge_detection_v2
+=======
+>>>>>>> c15a9d1eaef5b3fa69725d6e489dd33874c9304a
    radio="radios/dummy.xml"
    telemetry="telemetry/default_rotorcraft.xml"
    flight_plan="flight_plans/tudelft/course_orangeavoid_cyberzoo.xml"
