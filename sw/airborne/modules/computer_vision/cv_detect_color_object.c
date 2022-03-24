@@ -80,9 +80,9 @@ struct color_object_t {
   int32_t x_c;
   int32_t y_c;
   uint32_t color_count;
-  uint32_t edge_count[3];
   bool updated;
 };
+
 struct color_object_t global_filters[2];
 
 // struct that holds the data for the navigation function
@@ -269,25 +269,41 @@ struct object_counts_t find_object_centroid(struct image_t *img, int32_t* p_xc, 
                               uint8_t cr_min, uint8_t cr_max)
 {
   uint32_t cnt = 0;
+  uint32_t white_count = 0;
   uint32_t tot_x = 0;
   uint32_t tot_y = 0;
+  uint32_t slice;
+  uint32_t previous_slice;
   uint8_t *we = img->buf;
   uint8_t *buffer = img->buf;
+  u_int32_t white_threshold = 220;
   uint8_t previous_Y = 0;
+  uint32_t edge_length = 8;
+  uint32_t yp_mean;
+  uint32_t yp_previous_mean;
   int32_t dY = 0; 
-  uint8_t edge_threshhold = 0;
+  //Keep a memory list of the lumination values
+  uint32_t yp_memory_list[img->w];
+  uint8_t edge_threshhold = 5;
   struct object_counts_t counts;          // the array that stores the # of orange pixels and zone counts. 
-  uint16_t bin_size = img->w / 3;     // # of bins/zones in the image set to 3. 
+  uint16_t bin_size = img->w / 3;
   // Go through all the pixels
+
+
   // move along the y axis
   for (uint16_t y = 0; y < img->h; y++) {
+
 	//for each row the previous illumation  0;
 	previous_Y = 0;
 	dY = 0;
+  //clean the memory list
+  memset(yp_memory_list, 0, img->w);
+
 	//move along the x axis
     for (uint16_t x = 0; x < img->w; x ++) {
-
-      /*******Color detection *********/
+      slice = 0;
+      previous_slice = 0;
+      /*******Obtaining YUV colors**********/
       // Check if the color is inside the specified values
       uint8_t *yp, *up, *vp;
       int32_t yp_cache;
@@ -306,64 +322,119 @@ struct object_counts_t find_object_centroid(struct image_t *img, int32_t* p_xc, 
         yp = &buffer[y * 2 * img->w + 2 * x + 1];  // Y2
       }
 
+      /*********Detecting orange************/
       // Check between minimum and maximum values of the colors
       if ( (*yp >= lum_min) && (*yp <= lum_max) &&
            (*up >= cb_min ) && (*up <= cb_max ) &&
            (*vp >= cr_min ) && (*vp <= cr_max )) 
-           {
-    	      //Increase the pixel count
-            counts.orange_zone1++;
-            //Add up aggregate of x and y values
-            tot_x += x;
-            tot_y += y;
-           }
+      {
+    	  // put the orange pixel in the right zone. 
+        if(x <= bin_size )  
+        {
+          counts.orange_zone1++;
+        }
+        else if(x > bin_size && x<= (2 * bin_size))
+        {
+          counts.orange_zone2++;
+        }
+        else
+        {
+          counts.orange_zone3++;
+        }
+        //Add up aggregate of x and y values
+        tot_x += x;
+        tot_y += y;
+
+        // store the value of yp to use in the edge algorthm.
+        yp_cache = *yp;  
         
-        yp_cache = *yp; // store the value of yp to use in the edge algorthm. 
-        if (draw){
+        // visualize the organge detection by making pixel brights
+        if (draw)
+        {
+          *yp = 255;  // make pixel brighter in image
+        }
+      }
+
+
+      /*Jonathan Dijkstra - white detector using absolute illuminance pixel values */
+      if(yp_cache >= white_threshold)
+      {
+        // put the whtie pixel in the right zone. 
+        if(x <= bin_size ) 
+        {
+          counts.white_zone1++;
+        }
+        else if(x > bin_size && x<= (2 * bin_size))
+        {
+          counts.white_zone2++;
+        }
+        else
+        {
+          counts.white_zone3++;
+        }
+
+        // visualize the white detection by making pixel brights
+        if (draw)
+        {
+          *yp = 255;  // make pixel brighter in image
+        }
+      }
+
+
+      /**Jonathan Dijkstra - edge detector using and difference in y components
+       * 1. Calculate difference in lumanination (Y value) between two adjecent pixels
+       * 2. If the difference is above some threshold, count an edge
+       * 3. Keep track of the amount of edge detections in the x
+       **/
+
+      /* store current illumination value in the memory array */
+      yp_memory_list[x] = yp_cache;
+
+      //Start detecting edges only when enough data is available
+      if((x + edge_length +1) > 0)
+      {
+        //collect all Y point in the edge length, and the previous ones
+        for(uint32_t i = x - edge_length; i < x; i++)
+        {
+          slice += yp_memory_list[i];
+          previous_slice += yp_memory_list[i-1];
+        }
+        //calculate the mean of the slices
+        yp_mean = slice / edge_length;
+        yp_previous_mean = previous_slice / edge_length;
+      }
+
+      //Calculate lumination differences in slices
+      dY = abs(yp_mean - yp_previous_mean);
+      //Check if the difference above a certain treshhold
+      if(dY >= edge_threshhold)
+      {
+        // Find where the edge is
+        if(x <= bin_size ) //x >= 0 && 
+        {
+          counts.edge_zone1++;
+        }
+        else if(x > bin_size && x<= (2 * bin_size))
+        {
+          counts.edge_zone2++;
+        }
+        else
+        {
+          counts.edge_zone3++;
+        }
+
+        // visualize the edge detection by making pixel brights
+        if (draw)
+        {
           *yp = 255;  // make pixel brighter in image
         }
 
-        /**Jonathan Dijkstra - edge detector using and difference in y components
-         * 1. Calculate difference in lumanination (Y value) between two adjecent pixels
-         * 2. If the difference is above some threshold, count an edge
-         * 3. Keep track of the amount of edge detections in the x
-         *
-         * **/
-
-        //Calculate difference in pixel lumination
-        dY = abs(yp_cache - previous_Y);
-        //Check if the difference above a certain treshhold
-       if(dY >= edge_threshhold)
-        {
-        	// Find where the edge is
-    	   if(x <= bin_size ) //x >= 0 && 
-    	   {
-    		  counts.edge_zone1++;
-    	   }
-    	   else if(x > bin_size && x<= (2 * bin_size))
-    	   {
-    		   counts.edge_zone2++;
-    	   }
-    	   else if(x > (2 * bin_size) && x<= (3 * bin_size))
-    	   {
-    		   counts.edge_zone3++;
-    	   }
-         // block that does two extra bins. which are not used
-         /*
-    	   else if(x > (3 * bin_size) && x<= (4 * bin_size))
-    	   {
-    		   counts.zone4++;
-    	   }
-    	   else
-    	   {
-    		   counts.zone5++;
-    	   }
-         */
-        }
-        previous_Y = yp_cache;
+      }
+      previous_Y = yp_cache;
     }
   }
 
+   //Jesse: this whole part is ignored, we do not use cnt anymore, probably never evaluated. 
   //Check if a color has been detected
   if (cnt > 0) {
 	//Centroid of the x and y coordinates: divide the total by the count
@@ -375,10 +446,9 @@ struct object_counts_t find_object_centroid(struct image_t *img, int32_t* p_xc, 
     *p_yc = 0;
   }
 
-  //Return the pixel count
+  //Return the datatype containing all the information
   return counts;
 }
-
 
 //Periodic function of the object detector
 void color_object_detector_periodic(void)
@@ -423,5 +493,4 @@ void color_object_detector_periodic(void)
     
     local_zone_counts.updated = false; // tell the programm that the message is send.
   }
-  
 }
