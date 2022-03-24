@@ -6,7 +6,6 @@
 #define PAPARAZZI_BASICNAVIGATOR_H
 
 #include "../Navigator.h"
-#include "../../../../firmwares/rotorcraft/navigation.h"
 #include <stdio.h>
 #include <stdint.h>
 

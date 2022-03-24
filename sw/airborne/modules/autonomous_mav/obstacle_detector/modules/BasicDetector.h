@@ -3,17 +3,12 @@
 //
 
 #include "../ObstacleDetector.h"
-#include "modules/orange_avoider/orange_avoider.h"
-#include "firmwares/rotorcraft/navigation.h"
-#include "generated/airframe.h"
-#include "state.h"
-#include "modules/core/abi.h"
-#include <time.h>
-#include <stdio.h>
 
 #ifndef PAPARAZZI_BASICDETECTOR_H
 #define PAPARAZZI_BASICDETECTOR_H
 
+static struct image_t *storeFrontImage(struct image_t *img, uint8_t filter);
+static struct image_t *storeBottomImage(struct image_t *img, uint8_t filter);
 void init(struct ObstacleDetector *self);
 int obstacleAhead(struct ObstacleDetector *self);
 int getObstacleMap(struct ObstacleDetector *self);

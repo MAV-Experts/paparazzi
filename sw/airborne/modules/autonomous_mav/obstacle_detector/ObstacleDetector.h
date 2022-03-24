@@ -2,6 +2,24 @@
 // Created by theo on 24-03-22.
 //
 
+#include "firmwares/rotorcraft/navigation.h"
+#include "generated/airframe.h"
+#include "./../../computer_vision/cv.h"
+#include "./../../computer_vision/lib/vision/image.h"
+#include "./../../core/abi.h"
+#include "state.h"
+#include "std.h"
+#include "pthread.h"
+// #include "./../../computer_vision/cv_detect_color_object.h"
+
+#include <time.h>
+#include <stdio.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdbool.h>
+#include <math.h>
+
 #ifndef PAPARAZZI_OBSTACLEDETECTOR_H
 #define PAPARAZZI_OBSTACLEDETECTOR_H
 
@@ -13,11 +31,31 @@
 struct ObstacleDetector {
 
     /**
+     * This attribute stores the current image of the front camera
+     */
+//    image_t currentFrontImage;
+
+    /**
+     * This attribute stores the current image of the bottom camera
+     */
+//    image_t currentBottomImage;
+
+    /**
      * This method contains initialization stuff for the specific detector unit
      *
      * @param self reference to object
      */
     void (*init)(struct ObstacleDetector *self);
+
+    /**
+     * TODO: write name and so on
+     *
+     * @param img
+     * @param filter
+     * @return
+     */
+//    struct image_t (*storeFrontImage)(struct image_t *img, uint8_t filter);
+//    struct image_t (*storeBottomImage)(struct image_t *img, uint8_t filter);
 
     /**
      * This method returns true, when there i an obstacle ahead of the aircraft
