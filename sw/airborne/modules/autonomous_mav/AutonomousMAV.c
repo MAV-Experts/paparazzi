@@ -96,7 +96,7 @@ void heartbeat(struct MAV *self){
     if(self->currentState != nextState){
 
         // Log the transition of MAV states
-        VERBOSE_PRINT("State transition to: %d \n", nextState);
+        fprintf(stderr, "Autonomous MAV changed state: %d\n", nextState);
 
         // Handle all entry actions of the following state
         switch (nextState) {

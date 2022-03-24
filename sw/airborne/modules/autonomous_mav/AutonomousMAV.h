@@ -9,12 +9,6 @@
 #ifndef PAPARAZZI_AUTONOMOUSVEHICLE_H
 #define PAPARAZZI_AUTONOMOUSVEHICLE_H
 
-#define PRINT(string,...) fprintf(stderr, "[autonomous_mav->%s()] " string,__FUNCTION__ , ##__VA_ARGS__)
-#if OBJECT_DETECTOR_VERBOSE
-#define VERBOSE_PRINT PRINT
-#else
-#define VERBOSE_PRINT(...)
-#endif
 
 /**
  * Possible states of the MAV instance

@@ -13,6 +13,7 @@ void computePath(struct Navigator *self, int obstacleMap){
 }
 
 int hasError(struct Navigator *self){
+
     return 0;
 }
 
