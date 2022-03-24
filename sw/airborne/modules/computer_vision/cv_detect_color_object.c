@@ -72,7 +72,7 @@ struct object_counts_t {
    bool updated; 
 };
 // creating the variable where the counts are stored after the object detector function found them
-struct object_counts_t global_zone_counts;
+struct object_counts_t global_zone_counts = {0}; // initialize all values to 0.
 
 // Function, changed the function declaration to accomodate the struct
 struct object_counts_t find_object_centroid(struct image_t *img, int32_t* p_xc, int32_t* p_yc, bool draw,
@@ -118,7 +118,7 @@ static struct image_t *object_detector(struct image_t *img, uint8_t filter)
 
   // Filter and find centroid, declare a struct data type count to store values from the find_object_centroid function
   // stores the detected counts in the struct
-  struct object_counts_t detected_counts;
+  struct object_counts_t detected_counts = {0}; // initialize all values to 0
   detected_counts = find_object_centroid(img, &x_c, &y_c, draw, lum_min, lum_max, cb_min, cb_max, cr_min, cr_max);
 
   // Print object count en treshold, print image centre
@@ -320,17 +320,7 @@ struct object_counts_t find_object_centroid(struct image_t *img, int32_t* p_xc, 
     	   {
     		   counts.edge_zone3++;
     	   }
-         // block that does two extra bins. which are not used
-         /*
-    	   else if(x > (3 * bin_size) && x<= (4 * bin_size))
-    	   {
-    		   counts.zone4++;
-    	   }
-    	   else
-    	   {
-    		   counts.zone5++;
-    	   }
-         */
+         
         }
         previous_Y = yp_cache;
     }
@@ -388,6 +378,9 @@ void color_object_detector_periodic(void)
   
   if(local_zone_counts.updated){
 	  // send message with zone counts
+    // messages are send correctly i(jesse) checked
+
+    
     AbiSendMsgZONE_COUNTS(ZONE_COUNTS_ID, 
     local_zone_counts.white_zone1, local_zone_counts.white_zone2, local_zone_counts.white_zone3, 
     local_zone_counts.orange_zone1, local_zone_counts.orange_zone2, local_zone_counts.orange_zone3,
