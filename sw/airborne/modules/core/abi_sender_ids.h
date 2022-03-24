@@ -547,3 +547,11 @@
 #endif
 
 #endif /* ABI_SENDER_IDS_H */
+
+/*
+* ZONE_COUNTS message with id 30 to send the message from cv_detect_color_object
+*  These are the sender id's which should be unique within the message type ZONE_COUNTS
+*/
+#ifndef ZONE_COUNTS_ID
+#define ZONE_COUNTS_ID 1
+#endif
