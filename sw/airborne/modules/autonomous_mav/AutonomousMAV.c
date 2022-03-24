@@ -41,6 +41,10 @@ void heartbeat(struct MAV *self){
             break;
 
         case TAKEOFF:
+
+            // TODO: remove this later!! just for demo purposes
+            self->detector->obstacleAhead(self->detector);
+
             // State based action in takeoff
             if(self->aircraftHasError(self))
                 nextState = FATAL_ERROR;
@@ -96,7 +100,7 @@ void heartbeat(struct MAV *self){
     if(self->currentState != nextState){
 
         // Log the transition of MAV states
-        VERBOSE_PRINT("State transition to: %d \n", nextState);
+        fprintf(stderr, "Autonomous MAV changed state: %d\n", nextState);
 
         // Handle all entry actions of the following state
         switch (nextState) {

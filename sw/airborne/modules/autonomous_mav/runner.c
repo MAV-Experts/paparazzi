@@ -22,7 +22,8 @@ struct ObstacleDetector detector;
  */
 extern void autonomous_mav_init(void){
 
-    VERBOSE_PRINT("Called init function");
+    // Print status message for user
+    fprintf(stderr, "Initializing Autonomous MAV Instances ...\n");
 
     // Create navigator and detector
     detector = createBasicDetector();
@@ -37,8 +38,6 @@ extern void autonomous_mav_init(void){
  * Periodic function in Paparazzi loop (called with specific frequency, see xml file)
  */
 extern void autonomous_mav_periodic(void){
-
-    VERBOSE_PRINT("Called periodic function");
 
     // Call the heartbeat method on the instance of the MAV
     mav.heartbeat(&mav);

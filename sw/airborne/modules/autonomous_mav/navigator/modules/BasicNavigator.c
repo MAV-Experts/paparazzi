@@ -9,10 +9,13 @@ enum NAV_STATES getState(struct Navigator *self){
 }
 
 void computePath(struct Navigator *self, int obstacleMap){
+
     // TODO: implement
+
 }
 
 int hasError(struct Navigator *self){
+
     return 0;
 }
 
@@ -29,7 +32,9 @@ void land(struct Navigator *self){
 }
 
 void takeoff(struct Navigator *self){
+
     // TODO: implement
+
 }
 
 struct Navigator createBasicNavigator(){

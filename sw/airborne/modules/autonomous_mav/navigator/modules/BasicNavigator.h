@@ -6,6 +6,8 @@
 #define PAPARAZZI_BASICNAVIGATOR_H
 
 #include "../Navigator.h"
+#include <stdio.h>
+#include <stdint.h>
 
 enum NAV_STATES getState(struct Navigator *self);
 void computePath(struct Navigator *self, int obstacleMap);
