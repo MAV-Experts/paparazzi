@@ -9,6 +9,8 @@
  * The states that the Navigator can be in
  */
 enum NAV_STATES {
+    NAV_TAKEOFF,
+    NAV_LANDING,
     NAV_NORMAL,
     NAV_EVASIVE
 };
@@ -35,6 +37,14 @@ struct Navigator {
     enum NAV_STATES (*getState)(struct Navigator *self);
 
     /**
+     * Start and stop functions to boot and shutdown navigator
+     *
+     * @param self reference to instance
+     */
+    void (*start)(struct Navigator *self);
+    void (*stop)(struct Navigator *self);
+
+    /**
      * This method is being called in the major FSM logic with the current obstacle map of
      *
      * @param self reference to object
@@ -49,6 +59,20 @@ struct Navigator {
      * @return (1) if the navigator has problems
      */
     int (*hasError)(struct Navigator *self);
+
+    /**
+     * Calling this method will let the drone take off
+     *
+     * @param self reference to instance
+     */
+    void (*takeoff)(struct Navigator *self);
+
+    /**
+     * Calling this method will make the drone land where it is at
+     *
+     * @param self reference to instance
+     */
+    void (*land)(struct Navigator *self);
 
 };
 

@@ -9,11 +9,27 @@ enum NAV_STATES getState(struct Navigator *self){
 }
 
 void computePath(struct Navigator *self, int obstacleMap){
-
+    // TODO: implement
 }
 
 int hasError(struct Navigator *self){
     return 0;
+}
+
+void start(struct Navigator *self){
+    // TODO: implement
+}
+
+void stop(struct Navigator *self){
+    // TODO: implement
+}
+
+void land(struct Navigator *self){
+    // TODO: implement
+}
+
+void takeoff(struct Navigator *self){
+    // TODO: implement
 }
 
 struct Navigator createBasicNavigator(){
@@ -27,8 +43,10 @@ struct Navigator createBasicNavigator(){
     instance.getState = getState;
     instance.computePath = computePath;
     instance.hasError = hasError;
-
-    // TODO: call the contructor
+    instance.start = start;
+    instance.stop = stop;
+    instance.takeoff = takeoff;
+    instance.land = land;
 
     // Return the instance to the calling unit
     return instance;

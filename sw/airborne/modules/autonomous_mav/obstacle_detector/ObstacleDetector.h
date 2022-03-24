@@ -28,6 +28,14 @@ struct ObstacleDetector {
     int (*obstacleAhead)(struct ObstacleDetector *self);
 
     /**
+     * This method returns true if the aircraft is out of bounds of the cyber zoo
+     *
+     * @param self reference to object
+     * @return (1) if out of arena
+     */
+    int (*outOfArena)(struct ObstacleDetector *self);
+
+    /**
      * This method returns a 2D matrix of ints where encoded there is distance estimates
      *
      * @notes normalized values to depict world

@@ -20,6 +20,10 @@ int hasDetectionError(struct ObstacleDetector *self){
     return 0;
 }
 
+int outOfArena(struct ObstacleDetector *self){
+    return 0;
+}
+
 struct ObstacleDetector createBasicDetector(){
     // Create an instance to return to requesting block
     struct ObstacleDetector instance;
@@ -29,8 +33,6 @@ struct ObstacleDetector createBasicDetector(){
     instance.obstacleAhead = obstacleAhead;
     instance.getObstacleMap = getObstacleMap;
     instance.hasDetectionError = hasDetectionError;
-
-    // TODO: call the constructor of it
 
     return instance;
 }

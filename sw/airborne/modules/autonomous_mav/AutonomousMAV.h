@@ -2,21 +2,31 @@
 // Created by theo on 23-03-22.
 //
 
+#include "navigator/Navigator.h"
+#include "obstacle_detector/ObstacleDetector.h"
+#include <stdio.h>
+
 #ifndef PAPARAZZI_AUTONOMOUSVEHICLE_H
 #define PAPARAZZI_AUTONOMOUSVEHICLE_H
 
-#include "navigator/Navigator.h"
-#include "obstacle_detector/ObstacleDetector.h"
+#define PRINT(string,...) fprintf(stderr, "[object_detector->%s()] " string,__FUNCTION__ , ##__VA_ARGS__)
+#if OBJECT_DETECTOR_VERBOSE
+#define VERBOSE_PRINT PRINT
+#else
+#define VERBOSE_PRINT(...)
+#endif
 
 /**
  * Possible states of the MAV instance
  */
 enum STATE {
-    STARTED,
-    STANDBY,
+    STARTUP,
+    FATAL_ERROR,
+    TAKEOFF,
+    LANDING,
     NORMAL_MOVEMENT,
-    OBSTACLE_FOUND,
-    EVASIVE_ACTION,
+    EVASIVE_MOVEMENT,
+    REENTER_MOVEMENT,
     DONE
 };
 
@@ -79,11 +89,10 @@ int aircraftHasError(struct MAV *self);
 
 /**
  * This function creates an object of type MAV and returns it
- * TODO:
- *   - One needs to be able to pass a navigator
- *   - One needs to be able to pass an obstacle detector
  *
- * @return
+ * @param nav reference to navigation unit
+ * @param detector reference to detector unit
+ * @return an instance of a MAV
  */
 struct MAV createMAV(struct Navigator * nav, struct ObstacleDetector * detector);
 
