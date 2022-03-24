@@ -4,11 +4,15 @@
 
 #include "BasicDetector.h"
 
+
 void init(struct ObstacleDetector *self){
 
 }
 
 int obstacleAhead(struct ObstacleDetector *self){
+
+    // TODO: compute whether there is an obstacle ahead
+
     return 0;
 }
 
