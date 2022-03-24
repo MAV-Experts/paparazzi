@@ -110,27 +110,28 @@ static void floor_detection_cb(uint8_t __attribute__((unused)) sender_id,
 }
 
 
-#ifndef ZONE_COUNTS
+#ifndef ZONE_COUNTS_ID
 #endif
-static abi_event floor_detection_ev;
-static void floor_detection_cb(uint8_t __attribute__((unused)) sender_id,
-                               int16_t __attribute__((unused)) pixel_x, int16_t pixel_y,
-                               int16_t __attribute__((unused)) pixel_width, int16_t __attribute__((unused)) pixel_height,
-                               int32_t quality, int16_t __attribute__((unused)) extra)
+static abi_event edge_detection_ev;
+static void edge_detection_cb(uint8_t __attribute__((unused)) sender_id,
+                              int32_t white_zone1, int32_t white_zone2,
+                              int32_t white_zone3, int32_t orange_zone1, int32_t orange_zone2,
+                              int32_t orange_zone3, int32_t edge_zone1, int32_t edge_zone2,
+                              int32_t edge_zone3)
 {
-  floor_count = quality;
-  floor_centroid = pixel_y;
+  edge_number[0] = 0.4 * white_zone1 + 0.4 * orange_zone1 + 0.2 * edge_zone1;
+  edge_number[1] = 0.4 * white_zone2 + 0.4 * orange_zone2 + 0.2 * edge_zone2;
+  edge_number[2] = 0.4 * white_zone3 + 0.4 * orange_zone3 + 0.2 * edge_zone3;
 }
-*/
 
 /*
  * Initialisation function
  */
 void orange_avoider_guided_init(void)
 {
-  edge_number[0] = edges_left;
-  edge_number[1] = edges_center;
-  edge_number[2] = edges_right;
+  // edge_number[0] = edges_left;
+  // edge_number[1] = edges_center;
+  // edge_number[2] = edges_right;
   // Initialise random values
   srand(time(NULL));
   chooseIncrementAvoidance(edge_number, n);
@@ -139,17 +140,17 @@ void orange_avoider_guided_init(void)
   // bind our colorfilter callbacks to receive the color filter outputs
   AbiBindMsgVISUAL_DETECTION(ORANGE_AVOIDER_VISUAL_DETECTION_ID, &color_detection_ev, color_detection_cb);
   AbiBindMsgVISUAL_DETECTION(FLOOR_VISUAL_DETECTION_ID, &floor_detection_ev, floor_detection_cb);
- // AbiBindMsgVISUAL_DETECTION(EDGE_VISUAL_DETECTION_ID, &edge_detection_ev, edge_detection_cb);
+  AbiBindMsgZONE_COUNTS(ZONE_COUNTS_ID, &edge_detection_ev, edge_detection_cb);
 }
 
-/*
+/* 
  * Function that checks it is safe to move forwards, and then sets a forward velocity setpoint or changes the heading
  */
 void orange_avoider_guided_periodic(void)
 {
-  edge_number[0] = edges_left;
-  edge_number[1] = edges_center;
-  edge_number[2] = edges_right;
+  // edge_number[0] = edges_left;
+  // edge_number[1] = edges_center;
+  // edge_number[2] = edges_right;
   obstacle_count=edge_number[1];
   // Only run the mudule if we are in the correct flight mode
   if (guidance_h.mode != GUIDANCE_H_MODE_GUIDED) {
@@ -220,7 +221,12 @@ void orange_avoider_guided_periodic(void)
     case OUT_OF_BOUNDS:
       // stop
       guidance_h_set_guided_body_vel(0, 0);
-      chooseRandomIncrementAvoidance();
+      if (floor_centroid_frac > 0){
+        avoidance_heading_direction_FLOOR = 1.f;
+      }
+      else{
+        avoidance_heading_direction_FLOOR -1.f;
+      }
       // start turn back into arena
       guidance_h_set_guided_heading_rate(avoidance_heading_direction_FLOOR * RadOfDeg(30));
 
