@@ -1,11 +1,12 @@
 <!DOCTYPE airframe SYSTEM "../airframe.dtd">
 
 <airframe name="bebop_avoider">
+
   <description>Vision Course TUDelft V2019
   </description>
 
-
   <firmware name="rotorcraft">
+
     <target name="ap" board="bebop">
       <define name="VIDEO_CAPTURE_PATH" value="/data/ftp/internal_000/images"/>
       <define name="FILE_LOGGER_PATH" value="/data/ftp/internal_000/log"/>
@@ -35,7 +36,7 @@
     
     <define name="ARRIVED_AT_WAYPOINT" value="0.5"/><!-- Detect arrival at waypoint when within 0.5m -->
 
-  <!-- Subsystem section -->
+    <!-- Subsystem section -->
     <module name="telemetry" type="transparent_udp"/>
     <module name="radio_control" type="datalink"/>
     <module name="motor_mixing"/>
@@ -69,12 +70,14 @@
     <module name="orange_avoider">
       <define name="ORANGE_AVOIDER_VISUAL_DETECTION_ID" value="COLOR_OBJECT_DETECTION1_ID"/>
     </module>
+
     <module name="video_rtp_stream">
       <define name="VIEWVIDEO_CAMERA" value="front_camera"/>
       <define name="VIEWVIDEO_CAMERA2" value="bottom_camera"/>
       <define name="VIEWVIDEO_DOWNSIZE_FACTOR" value="1"/>
       <define name="VIEWVIDEO_QUALITY_FACTOR" value="40"/>
     </module>
+
   </firmware>
 
   <commands>
@@ -250,6 +253,7 @@
     <define name="SENSORS_PARAMS" value="nps_sensors_params_default.h" type="string"/>
     <define name="MT9F002_SENSOR_RES_DIVIDER" value="4"/>
   </section>
+
   <include href="conf/simulator/gazebo/airframes/bebop.xml"/>
 
   <section name="AUTOPILOT">
@@ -268,4 +272,5 @@
     <define name="LOW_BAT_LEVEL" value="11.1" unit="V"/>
     <define name="MAX_BAT_LEVEL" value="12.4" unit="V"/>
   </section>
+
 </airframe>
