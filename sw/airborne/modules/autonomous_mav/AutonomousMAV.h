@@ -9,6 +9,10 @@
 #ifndef PAPARAZZI_AUTONOMOUSVEHICLE_H
 #define PAPARAZZI_AUTONOMOUSVEHICLE_H
 
+// The dimensions of the matrix that detector and navigator exchange
+#define MATRIX_DIMENSIONS_HORIZONTAL 3
+#define MATRIX_DIMENSIONS_VERTICAL 2
+
 
 /**
  * Possible states of the MAV instance

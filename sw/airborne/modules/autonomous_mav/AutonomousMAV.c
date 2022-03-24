@@ -41,6 +41,10 @@ void heartbeat(struct MAV *self){
             break;
 
         case TAKEOFF:
+
+            // TODO: remove this later!! just for demo purposes
+            self->detector->obstacleAhead(self->detector);
+
             // State based action in takeoff
             if(self->aircraftHasError(self))
                 nextState = FATAL_ERROR;
