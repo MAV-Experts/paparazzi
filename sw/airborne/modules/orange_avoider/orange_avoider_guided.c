@@ -95,6 +95,7 @@ static void floor_detection_cb(uint8_t __attribute__((unused)) sender_id,
   floor_count = quality;
   floor_centroid = pixel_y;
 }
+
 uint32_t test_info_global;
 
 #ifndef TEST_MESSAGE_ID
@@ -104,6 +105,40 @@ static abi_event test_ev;
 static void test_cb(uint8_t __attribute__((unused)) sender_id, uint32_t test_info)
 {
   test_info_global = test_info;
+}
+
+struct object_counts_t {
+    uint32_t white_zone1;
+    uint32_t white_zone2;
+    uint32_t white_zone3;
+    uint32_t orange_zone1;
+    uint32_t orange_zone2;
+    uint32_t orange_zone3;
+    uint32_t edge_zone1;
+    uint32_t edge_zone2;
+    uint32_t edge_zone3;
+   // bool updated;  not used for the navigation.
+};
+struct object_counts_t global_counts;
+
+#ifndef ZONE_COUNTS_ID
+#error ZONE_COUNTS_ID  is not defined.
+#endif
+static abi_event zone_counts_ev;
+static void zone_counts_cb(uint8_t __attribute__((unused)) sender_id, 
+                          uint32_t white_zone1, uint32_t white_zone2, uint32_t white_zone3,
+                          uint32_t orange_zone1, uint32_t 2, uint32_t orange_zone3,
+                          uint32_t edge_zone1, uint32_t edge_zone2, uint32_t edge_zone3)
+{
+  global_counts.white_zone1 = white_zone1;
+  global_counts.white_zone2 = white_zone2;
+  global_counts.white_zone3 = white_zone3;
+  global_counts.orange_zone1 = orange_zone1;
+  global_counts.orange_zone2 = orange_zone2;
+  global_counts.orange_zone3 = orange_zone3;
+  global_counts.edge_zone1 = edge_zone1;
+  global_counts.edge_zone2 = edge_zone2;
+  global_counts.edge_zone3 = edge_zone3;
 }
 
 
@@ -121,6 +156,8 @@ void orange_avoider_guided_init(void)
   AbiBindMsgVISUAL_DETECTION(ORANGE_AVOIDER_VISUAL_DETECTION_ID, &color_detection_ev, color_detection_cb);
   AbiBindMsgVISUAL_DETECTION(FLOOR_VISUAL_DETECTION_ID, &floor_detection_ev, floor_detection_cb);
   AbiBindMsgTEST_MESSAGE(TEST_MESSAGE_ID, &test_ev, test_cb);
+
+  AbiBindMsgTEST_MESSAGE(ZONE_COUNTS_ID, &zone_counts_ev, zone_counts_cb);
   
 }
 
@@ -136,6 +173,7 @@ void orange_avoider_guided_periodic(void)
     return;
   }
 
+  VERBOSE_PRINT("test variable = %d\n", test_info_global);
   VERBOSE_PRINT("test variable = %d\n", test_info_global);
   // compute current color thresholds
   int32_t color_count_threshold = oag_color_count_frac * front_camera.output_size.w * front_camera.output_size.h;

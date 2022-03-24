@@ -266,14 +266,14 @@ void color_object_detector_periodic(void)
   pthread_mutex_unlock(&mutex);
 
   
-  
+  AbiSendMsgTEST_MESSAGE(TEST_MESSAGE_ID, test_info);
 
   if(local_filters[0].updated){
     AbiSendMsgVISUAL_DETECTION(COLOR_OBJECT_DETECTION1_ID, local_filters[0].x_c, local_filters[0].y_c,
         0, 0, local_filters[0].color_count, 0);
-    
+        
     test_info++;
-    AbiSendMsgTEST_MESSAGE(TEST_MESSAGE_ID, test_info);
+    
     local_filters[0].updated = false;
   }
   if(local_filters[1].updated){

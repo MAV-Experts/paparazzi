@@ -542,4 +542,8 @@
 #define TEST_MESSAGE_ID 1
 #endif
 
+#ifndef ZONE_COUNTS_ID
+#define ZONE_COUNTS_ID 1
+#endif
+
 #endif /* ABI_SENDER_IDS_H */
