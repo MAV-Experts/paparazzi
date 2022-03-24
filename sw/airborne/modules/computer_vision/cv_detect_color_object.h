@@ -53,19 +53,6 @@ extern bool cod_draw2;
 
 // struct that holds the data for the navigation function
 // for some reason it does not compile when declared in the header :(
-struct object_counts_t {
-    uint32_t white_zone1;
-    uint32_t white_zone2;
-    uint32_t white_zone3;
-    uint32_t orange_zone1;
-    uint32_t orange_zone2;
-    uint32_t orange_zone3;
-    uint32_t edge_zone1;
-    uint32_t edge_zone2;
-    uint32_t edge_zone3;
-    bool updated;
-};
-
 
 
 // Module functions
