@@ -246,10 +246,14 @@ struct object_counts_t find_object_centroid(struct image_t *img, int32_t* p_xc, 
   uint8_t *we = img->buf;
   uint8_t *buffer = img->buf;
   
-  int32_t previous_Y;
+  int32_t slice;
+  int32_t previous_slice;
+  int32_t yp_mean;
+  int32_t yp_previous_mean;
   int32_t yp_cache; // stores the yp value so the img value can be overwritten for visualization of the method.
   int32_t dY = 0; 
   uint32_t yp_memory_list[img->w]; // array of yp values used to reduce noice in edge detection. 
+  uint32_t edge_length = 8; // pixels over which is averaged to reduce noice. 
   uint32_t white_threshold = 200;
   uint8_t edge_threshhold = 0;
   struct object_counts_t counts;          // the array that stores the # of orange pixels and zone counts. 
@@ -260,7 +264,6 @@ struct object_counts_t find_object_centroid(struct image_t *img, int32_t* p_xc, 
 	//initializing variables to 0 every row.
 	yp_cache = 0;
 	dY = 0;
-  previous_Y = 0;
   //clean the memory list
   memset(yp_memory_list, 0, img->w);
 
@@ -352,27 +355,49 @@ struct object_counts_t find_object_centroid(struct image_t *img, int32_t* p_xc, 
          *
          * **/
 
-        //Calculate difference in pixel lumination
-        dY = abs(yp_cache - previous_Y);
-        //Check if the difference above a certain treshhold
-       if(dY >= edge_threshhold)
+        /* store current illumination value in the memory array */
+      yp_memory_list[x] = yp_cache;
+
+      //Start detecting edges only when enough data is available
+      if((x + edge_length +1) > 0)
+      {
+        //collect all Y point in the edge length, and the previous ones
+        for(uint32_t i = x - edge_length; i < x; i++)
         {
-        	// Find where the edge is
-    	   if(x <= bin_size ) //x >= 0 && 
-    	   {
-    		  counts.edge_zone1++;
-    	   }
-    	   else if(x > bin_size && x<= (2 * bin_size))
-    	   {
-    		   counts.edge_zone2++;
-    	   }
-    	   else if(x > (2 * bin_size) && x<= (3 * bin_size))
-    	   {
-    		   counts.edge_zone3++;
-    	   }
-         
+          slice += yp_memory_list[i];             // total of last 'edge_length' pixels.
+          previous_slice += yp_memory_list[i-1];
         }
-        previous_Y = yp_cache;
+        //calculate the mean of the slices
+        yp_mean = slice / edge_length;
+        yp_previous_mean = previous_slice / edge_length;
+      }
+
+      //Calculate lumination differences in slices
+      dY = abs(yp_mean - yp_previous_mean);
+      //Check if the difference above a certain treshhold
+      if(dY >= edge_threshhold)
+      {
+        // Find where the edge is
+        if(x <= bin_size ) //x >= 0 && 
+        {
+          counts.edge_zone1++;
+        }
+        else if(x > bin_size && x<= (2 * bin_size))
+        {
+          counts.edge_zone2++;
+        }
+        else
+        {
+          counts.edge_zone3++;
+        }
+
+        // visualize the edge detection by making pixel brights
+        if (draw)
+        {
+          *yp = 255;  // make pixel brighter in image
+        }
+
+      }
     }
   }
 
