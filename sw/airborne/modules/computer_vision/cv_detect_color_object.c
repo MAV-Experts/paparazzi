@@ -26,8 +26,9 @@
  */
 
 // Own header
-#include "modules/computer_vision/cv_detect_color_object.h"
-#include "modules/computer_vision/cv.h"
+// #include "modules/computer_vision/cv_detect_color_object.h"
+#include "cv_detect_color_object.h"
+// #include "modules/computer_vision/cv.h"
 #include "modules/core/abi.h"
 #include "std.h"
 #include "math.h"
@@ -85,20 +86,7 @@ struct color_object_t {
 
 struct color_object_t global_filters[2];
 
-// struct that holds the data for the navigation function
-// for some reason it does not compile when declared in the header :(
-struct object_counts_t {
-   uint32_t white_zone1;
-   uint32_t white_zone2;
-   uint32_t white_zone3;
-   uint32_t orange_zone1;
-   uint32_t orange_zone2;
-   uint32_t orange_zone3;
-   uint32_t edge_zone1;
-   uint32_t edge_zone2;
-   uint32_t edge_zone3;
-   bool updated; 
-};
+
 // creating the variable where the counts are stored after the object detector function found them
 struct object_counts_t global_zone_counts;
 
