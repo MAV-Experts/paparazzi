@@ -95,12 +95,24 @@ static void floor_detection_cb(uint8_t __attribute__((unused)) sender_id,
   floor_count = quality;
   floor_centroid = pixel_y;
 }
+uint32_t test_info_global;
+
+#ifndef TEST_MESSAGE_ID
+#error TEST_MESSAGE_ID  is not defined.
+#endif
+static abi_event test_ev;
+static void test_cb(uint8_t __attribute__((unused)) sender_id, uint32_t test_info)
+{
+  test_info_global = test_info;
+}
+
 
 /*
  * Initialisation function
  */
 void orange_avoider_guided_init(void)
 {
+  
   // Initialise random values
   srand(time(NULL));
   chooseRandomIncrementAvoidance();
@@ -108,6 +120,8 @@ void orange_avoider_guided_init(void)
   // bind our colorfilter callbacks to receive the color filter outputs
   AbiBindMsgVISUAL_DETECTION(ORANGE_AVOIDER_VISUAL_DETECTION_ID, &color_detection_ev, color_detection_cb);
   AbiBindMsgVISUAL_DETECTION(FLOOR_VISUAL_DETECTION_ID, &floor_detection_ev, floor_detection_cb);
+  AbiBindMsgTEST_MESSAGE(TEST_MESSAGE_ID, &test_ev, test_cb);
+  
 }
 
 /*
@@ -122,6 +136,7 @@ void orange_avoider_guided_periodic(void)
     return;
   }
 
+  VERBOSE_PRINT("test variable = %d\n", test_info_global);
   // compute current color thresholds
   int32_t color_count_threshold = oag_color_count_frac * front_camera.output_size.w * front_camera.output_size.h;
   int32_t floor_count_threshold = oag_floor_count_frac * front_camera.output_size.w * front_camera.output_size.h;

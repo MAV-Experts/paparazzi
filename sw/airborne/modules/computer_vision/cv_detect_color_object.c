@@ -256,6 +256,8 @@ uint32_t find_object_centroid(struct image_t *img, int32_t* p_xc, int32_t* p_yc,
   return cnt;
 }
 
+uint32_t test_info;
+
 void color_object_detector_periodic(void)
 {
   static struct color_object_t local_filters[2];
@@ -263,9 +265,15 @@ void color_object_detector_periodic(void)
   memcpy(local_filters, global_filters, 2*sizeof(struct color_object_t));
   pthread_mutex_unlock(&mutex);
 
+  
+  
+
   if(local_filters[0].updated){
     AbiSendMsgVISUAL_DETECTION(COLOR_OBJECT_DETECTION1_ID, local_filters[0].x_c, local_filters[0].y_c,
         0, 0, local_filters[0].color_count, 0);
+    
+    test_info++;
+    AbiSendMsgTEST_MESSAGE(TEST_MESSAGE_ID, test_info);
     local_filters[0].updated = false;
   }
   if(local_filters[1].updated){
@@ -273,4 +281,7 @@ void color_object_detector_periodic(void)
         0, 0, local_filters[1].color_count, 1);
     local_filters[1].updated = false;
   }
+
+    
+    
 }

@@ -211,6 +211,10 @@
       <field name="data" type="uint8_t *">Pointer to an array of bytes, or any structure depending on the sender and the type of data</field>
     </message>
 
+    <message name="TEST_MESSAGE" id="30">
+      <field name="test_info"      type="uint32_t">should contain 1234 as test message</field>
+    </message>
+
   </msg_class>
 
 </protocol>

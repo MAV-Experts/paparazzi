@@ -538,4 +538,8 @@
 #define CLOUD_SENSOR_ID 1
 #endif
 
+#ifndef TEST_MESSAGE_ID
+#define TEST_MESSAGE_ID 1
+#endif
+
 #endif /* ABI_SENDER_IDS_H */
