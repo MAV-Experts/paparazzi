@@ -326,24 +326,58 @@ struct object_counts_t find_object_centroid(struct image_t *img, int32_t* p_xc, 
       // Check between minimum and maximum values of the colors
       if ( (*yp >= lum_min) && (*yp <= lum_max) &&
            (*up >= cb_min ) && (*up <= cb_max ) &&
-           (*vp >= cr_min ) && (*vp <= cr_max )) {
-    	//Increase the pixel count
-        counts.orange ++;
+           (*vp >= cr_min ) && (*vp <= cr_max )) 
+      {
+    	  // put the orange pixel in the right zone. 
+        if(x <= bin_size )  
+        {
+          counts.orange_zone1++;
+        }
+        else if(x > bin_size && x<= (2 * bin_size))
+        {
+          counts.orange_zone2++;
+        }
+        else
+        {
+          counts.orange_zone3++;
+        }
         //Add up aggregate of x and y values
         tot_x += x;
         tot_y += y;
+
+        // store the value of yp to use in the edge algorthm.
+        yp_cache = *yp;  
+        
+        // visualize the organge detection by making pixel brights
+        if (draw)
+        {
+          *yp = 255;  // make pixel brighter in image
+        }
       }
 
-      // store the value of yp to use in the edge algorthm.
-      yp_cache = *yp;  
-      if (draw){
-        *yp = 255;  // make pixel brighter in image
-      }
 
       /*Jonathan Dijkstra - white detector using absolute illuminance pixel values */
       if(yp_cache >= white_threshold)
       {
-        counts.white_count++;
+        // put the whtie pixel in the right zone. 
+        if(x <= bin_size ) 
+        {
+          counts.white_zone1++;
+        }
+        else if(x > bin_size && x<= (2 * bin_size))
+        {
+          counts.white_zone2++;
+        }
+        else
+        {
+          counts.white_zone3++;
+        }
+
+        // visualize the white detection by making pixel brights
+        if (draw)
+        {
+          *yp = 255;  // make pixel brighter in image
+        }
       }
 
 
@@ -378,21 +412,29 @@ struct object_counts_t find_object_centroid(struct image_t *img, int32_t* p_xc, 
         // Find where the edge is
         if(x <= bin_size ) //x >= 0 && 
         {
-          counts.zone1++;
+          counts.edge_zone1++;
         }
         else if(x > bin_size && x<= (2 * bin_size))
         {
-          counts.zone2++;
+          counts.edge_zone2++;
         }
-        else (x > (2 * bin_size) && x<= (3 * bin_size))
+        else
         {
-          counts.zone3++;
+          counts.edge_zone3++;
         }
+
+        // visualize the edge detection by making pixel brights
+        if (draw)
+        {
+          *yp = 255;  // make pixel brighter in image
+        }
+
       }
       previous_Y = yp_cache;
     }
   }
 
+   //Jesse: this whole part is ignored, we do not use cnt anymore, probably never evaluated. 
   //Check if a color has been detected
   if (cnt > 0) {
 	//Centroid of the x and y coordinates: divide the total by the count
