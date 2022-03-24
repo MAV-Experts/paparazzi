@@ -269,7 +269,6 @@ struct object_counts_t find_object_centroid(struct image_t *img, int32_t* p_xc, 
                               uint8_t cr_min, uint8_t cr_max)
 {
   uint32_t cnt = 0;
-  uint32_t white_count = 0;
   uint32_t tot_x = 0;
   uint32_t tot_y = 0;
   uint32_t slice;
@@ -277,11 +276,11 @@ struct object_counts_t find_object_centroid(struct image_t *img, int32_t* p_xc, 
   uint8_t *we = img->buf;
   uint8_t *buffer = img->buf;
   u_int32_t white_threshold = 220;
-  uint8_t previous_Y = 0;
   uint32_t edge_length = 8;
   uint32_t yp_mean;
   uint32_t yp_previous_mean;
   int32_t dY = 0; 
+  int32_t yp_cache = 0;
   //Keep a memory list of the lumination values
   uint32_t yp_memory_list[img->w];
   uint8_t edge_threshhold = 5;
@@ -294,7 +293,6 @@ struct object_counts_t find_object_centroid(struct image_t *img, int32_t* p_xc, 
   for (uint16_t y = 0; y < img->h; y++) {
 
 	//for each row the previous illumation  0;
-	previous_Y = 0;
 	dY = 0;
   //clean the memory list
   memset(yp_memory_list, 0, img->w);
@@ -306,7 +304,7 @@ struct object_counts_t find_object_centroid(struct image_t *img, int32_t* p_xc, 
       /*******Obtaining YUV colors**********/
       // Check if the color is inside the specified values
       uint8_t *yp, *up, *vp;
-      int32_t yp_cache;
+      
 
       if (x % 2 == 0) {
         // Even x
@@ -391,7 +389,7 @@ struct object_counts_t find_object_centroid(struct image_t *img, int32_t* p_xc, 
       yp_memory_list[x] = yp_cache;
 
       //Start detecting edges only when enough data is available
-      if((x + edge_length +1) > 0)
+      if((x + edge_length +1) > 0) // this is always true right, there is a +1 and the other values can not be negative.
       {
         //collect all Y point in the edge length, and the previous ones
         for(uint32_t i = x - edge_length; i < x; i++)
@@ -430,7 +428,6 @@ struct object_counts_t find_object_centroid(struct image_t *img, int32_t* p_xc, 
         }
 
       }
-      previous_Y = yp_cache;
     }
   }
 
