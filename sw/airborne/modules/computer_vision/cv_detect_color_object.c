@@ -142,12 +142,12 @@ static struct image_t *object_detector(struct image_t *img, uint8_t filter)
   global_zone_counts.white_zone3 = detected_counts.white_zone3;
   // store the orange counts in the right zones
   global_zone_counts.orange_zone1 = detected_counts.orange_zone1;
-  global_zone_counts.orange_zone1 = detected_counts.orange_zone2;
-  global_zone_counts.orange_zone1 = detected_counts.orange_zone3;
+  global_zone_counts.orange_zone2 = detected_counts.orange_zone2;
+  global_zone_counts.orange_zone3 = detected_counts.orange_zone3;
   // store the edge counts in the right zones
   global_zone_counts.edge_zone1 = detected_counts.edge_zone1;
-  global_zone_counts.edge_zone1 = detected_counts.edge_zone2;
-  global_zone_counts.edge_zone1 = detected_counts.edge_zone3;
+  global_zone_counts.edge_zone2 = detected_counts.edge_zone2;
+  global_zone_counts.edge_zone3 = detected_counts.edge_zone3;
   // tell the periodic function that there is new information to send. 
   global_zone_counts.updated = true;
   //unlock the mutual exclusion
