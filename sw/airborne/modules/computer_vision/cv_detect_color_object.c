@@ -142,12 +142,12 @@ static struct image_t *object_detector(struct image_t *img, uint8_t filter)
   global_zone_counts.white_zone3 = detected_counts.white_zone3;
   // store the orange counts in the right zones
   global_zone_counts.orange_zone1 = detected_counts.orange_zone1;
-  global_zone_counts.orange_zone1 = detected_counts.orange_zone2;
-  global_zone_counts.orange_zone1 = detected_counts.orange_zone3;
+  global_zone_counts.orange_zone2 = detected_counts.orange_zone2;
+  global_zone_counts.orange_zone3 = detected_counts.orange_zone3;
   // store the edge counts in the right zones
   global_zone_counts.edge_zone1 = detected_counts.edge_zone1;
-  global_zone_counts.edge_zone1 = detected_counts.edge_zone2;
-  global_zone_counts.edge_zone1 = detected_counts.edge_zone3;
+  global_zone_counts.edge_zone2 = detected_counts.edge_zone2;
+  global_zone_counts.edge_zone3 = detected_counts.edge_zone3;
   // tell the periodic function that there is new information to send. 
   global_zone_counts.updated = true;
   //unlock the mutual exclusion
@@ -235,7 +235,7 @@ void color_object_detector_init(void)
  * @return number of pixels of image within the filter bounds.
  */
 //Function declaration of the finding the centre of the image - find orange pixels
-struct object_counts_t find_object_centroid(struct image_t *img, int32_t* p_xc, int32_t* p_yc, bool draw,
+struct object_counts_t find_object_centroid(struct image_t *img, int32_t* p_xc, int32_t* p_yc, bool draw_orange,
                               uint8_t lum_min, uint8_t lum_max,
                               uint8_t cb_min, uint8_t cb_max,
                               uint8_t cr_min, uint8_t cr_max)
@@ -246,16 +246,27 @@ struct object_counts_t find_object_centroid(struct image_t *img, int32_t* p_xc, 
   uint8_t *we = img->buf;
   uint8_t *buffer = img->buf;
   
+  draw_orange = false;
+  bool draw_white = true;
+  bool draw_edges = true;
+
+  uint32_t white_threshold = 235;     // set higher to detect less white
+  uint8_t edge_threshhold = 18;        // set higher to detect less edges
+
   int32_t previous_Y;
   int32_t yp_cache; // stores the yp value so the img value can be overwritten for visualization of the method.
   int32_t dY = 0; 
   uint32_t yp_memory_list[img->w]; // array of yp values used to reduce noice in edge detection. 
-  uint32_t white_threshold = 200;
-  uint8_t edge_threshhold = 0;
-  struct object_counts_t counts;          // the array that stores the # of orange pixels and zone counts. 
-  uint16_t bin_size = img->w / 3;     // # of bins/zones in the image set to 3. 
+  
+  struct object_counts_t counts = {0};          // the struct to store the counts initialized to 0. 
+  // img->w = 240 
+  // img->h = 520
+  // this means that the image is rotated it is rotated such that the right side is on the bottom.
+
+  uint16_t bin_size = img->h / 3;     // # of bins/zones in the image set to 3. 
   // Go through all the pixels
-  // move along the y axis
+  
+  // move along the horizontal axis starting at the bottom which equels the right side of the image.
   for (uint16_t y = 0; y < img->h; y++) {
 	//initializing variables to 0 every row.
 	yp_cache = 0;
@@ -289,16 +300,16 @@ struct object_counts_t find_object_centroid(struct image_t *img, int32_t* p_xc, 
       yp_cache = *yp; // store the value of yp to be able to overwrite it for visualization.
 
       // Check between minimum and maximum values of the colors
-      if ( (*yp >= lum_min) && (*yp <= lum_max) &&
-           (*up >= cb_min ) && (*up <= cb_max ) &&
-           (*vp >= cr_min ) && (*vp <= cr_max )) 
+      if ((*yp >= lum_min) && (*yp <= lum_max) &&
+          (*up >= cb_min ) && (*up <= cb_max ) &&
+          (*vp >= cr_min ) && (*vp <= cr_max )) 
            {
     	      // put the orange pixel in the right zone. 
-            if(x <= bin_size )  
+            if(y <= bin_size )  
             {
               counts.orange_zone1++;
             }
-            else if(x > bin_size && x<= (2 * bin_size))
+            else if(y > bin_size && y<= (2 * bin_size))
             {
               counts.orange_zone2++;
             }
@@ -306,9 +317,11 @@ struct object_counts_t find_object_centroid(struct image_t *img, int32_t* p_xc, 
             {
               counts.orange_zone3++;
             }
-      
+            // the below print statement brakes paparazzi telemetry.
+            // printf("orange zone1=%d \n ornage zone2=%d\n orange zone3 = %d\n", counts.edge_zone1, counts.orange_zone2, counts.orange_zone3);
+            
             // vizualize the orange detection by making the pizel white.
-            if (draw)
+            if (draw_orange)
             {
               *yp = 255;  // make pixel brighter in image
             }
@@ -318,16 +331,16 @@ struct object_counts_t find_object_centroid(struct image_t *img, int32_t* p_xc, 
             tot_y += y;
            }
         
-      
+      *yp = 0;
       /*Jonathan Dijkstra - white detector using absolute illuminance pixel values */
       if(yp_cache >= white_threshold)
       {
         // put the whtie pixel in the right zone. 
-        if(x <= bin_size ) 
+        if(y <= bin_size ) 
         {
           counts.white_zone1++;
         }
-        else if(x > bin_size && x<= (2 * bin_size))
+        else if(y > bin_size && y<= (2 * bin_size))
         {
           counts.white_zone2++;
         }
@@ -337,9 +350,9 @@ struct object_counts_t find_object_centroid(struct image_t *img, int32_t* p_xc, 
         }
 
         // visualize the white detection by making pixel brights
-        if (draw)
+        if (draw_white)
         {
-          *yp = 255;  // make pixel brighter in image
+          *yp = 255;  // make pixel black
         }
       }
 
@@ -354,23 +367,32 @@ struct object_counts_t find_object_centroid(struct image_t *img, int32_t* p_xc, 
 
         //Calculate difference in pixel lumination
         dY = abs(yp_cache - previous_Y);
+        
         //Check if the difference above a certain treshhold
        if(dY >= edge_threshhold)
         {
         	// Find where the edge is
-    	   if(x <= bin_size ) //x >= 0 && 
+    	   if(y <= bin_size ) //x >= 0 && 
     	   {
     		  counts.edge_zone1++;
     	   }
-    	   else if(x > bin_size && x<= (2 * bin_size))
+    	   else if(y > bin_size && y<= (2 * bin_size))
     	   {
     		   counts.edge_zone2++;
     	   }
-    	   else if(x > (2 * bin_size) && x<= (3 * bin_size))
+    	   else
     	   {
     		   counts.edge_zone3++;
     	   }
          
+         // vizualize the orange detection by making the pizel white.
+            if (draw_edges)
+            {
+              *yp = 76;  // make pixel brighter in image
+              *up = 84;
+              *vp = 255;
+            }
+
         }
         previous_Y = yp_cache;
     }
@@ -430,6 +452,15 @@ void color_object_detector_periodic(void)
 	  // send message with zone counts
     // messages are send correctly i(jesse) checked
 
+    //local_zone_counts.white_zone1=3;
+    //local_zone_counts.white_zone2=3;
+    // local_zone_counts.white_zone3=3;
+    //local_zone_counts.orange_zone1=3;
+    //local_zone_counts.orange_zone2=3;
+    //local_zone_counts.orange_zone3=3;
+    //local_zone_counts.edge_zone1=3;
+    //local_zone_counts.edge_zone2=3;
+    //local_zone_counts.edge_zone3=3;
     
     AbiSendMsgZONE_COUNTS(ZONE_COUNTS_ID, 
     local_zone_counts.white_zone1, local_zone_counts.white_zone2, local_zone_counts.white_zone3, 

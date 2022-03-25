@@ -199,9 +199,9 @@ void orange_avoider_guided_periodic(void)
   // VERBOSE_PRINT("Floor centroid: %f\n", floor_centroid_frac);
 
 // printing trouble shoot messages.
-  VERBOSE_PRINT("\n white: \n left=%d \n center=%d \n right=%d \n ", g_global_zone_counts.white_zone1, g_global_zone_counts.white_zone2, g_global_zone_counts.white_zone3);
-  VERBOSE_PRINT("\n orange: \n left=%d \n center=%d \n right=%d \n ", g_global_zone_counts.orange_zone1, g_global_zone_counts.orange_zone2, g_global_zone_counts.orange_zone3);
-  VERBOSE_PRINT("\n edge: \n left=%d \n center=%d \n right=%d \n ", g_global_zone_counts.edge_zone1, g_global_zone_counts.edge_zone2, g_global_zone_counts.edge_zone3);
+  printf("\n white: \n left=%d \n center=%d \n right=%d \n ", g_global_zone_counts.white_zone1, g_global_zone_counts.white_zone2, g_global_zone_counts.white_zone3);
+  printf("\n orange: \n left=%d \n center=%d \n right=%d \n ", g_global_zone_counts.orange_zone1, g_global_zone_counts.orange_zone2, g_global_zone_counts.orange_zone3);
+  printf("\n edge: \n left=%d \n center=%d \n right=%d \n ", g_global_zone_counts.edge_zone1, g_global_zone_counts.edge_zone2, g_global_zone_counts.edge_zone3);
 
 
   // update our safe confidence using color threshold
