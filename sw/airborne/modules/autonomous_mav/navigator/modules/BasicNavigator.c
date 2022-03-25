@@ -7,7 +7,8 @@
 enum NAV_STATES getState(struct Navigator *self){
 
     // Log status update of navigator
-    fprintf(stderr, "BasicNavigator: getState()\n");
+    if(LOG_UNIT_METHOD_CALLS)
+        fprintf(stderr, "BasicNavigator: getState()\n");
 
     return NAV_NORMAL;
 }
@@ -15,7 +16,8 @@ enum NAV_STATES getState(struct Navigator *self){
 void computePath(struct Navigator *self, int obstacleMap){
 
     // Log status update of navigator
-    fprintf(stderr, "BasicNavigator: computePath()\n");
+    if(LOG_UNIT_METHOD_CALLS)
+        fprintf(stderr, "BasicNavigator: computePath()\n");
 
     // FIXME: this does not work
     fprintf(stderr, "Current Pos: (%d, %d, %d)\n", state.ecef_pos_i.x, state.ecef_pos_i.y, state.ecef_pos_i.z);
@@ -28,7 +30,8 @@ void computePath(struct Navigator *self, int obstacleMap){
 int hasError(struct Navigator *self){
 
     // Log status update of navigator
-    fprintf(stderr, "BasicNavigator: hasError()\n");
+    if(LOG_UNIT_METHOD_CALLS)
+        fprintf(stderr, "BasicNavigator: hasError()\n");
 
     return 0;
 }
@@ -36,7 +39,8 @@ int hasError(struct Navigator *self){
 void start(struct Navigator *self){
 
     // Log status update of navigator
-    fprintf(stderr, "BasicNavigator: start()\n");
+    if(LOG_UNIT_METHOD_CALLS)
+        fprintf(stderr, "BasicNavigator: start()\n");
 
     // Set the ground reference for the navigator
     NavSetGroundReferenceHere();
@@ -46,7 +50,8 @@ void start(struct Navigator *self){
 void stop(struct Navigator *self){
 
     // Log status update of navigator
-    fprintf(stderr, "BasicNavigator: stop()\n");
+    if(LOG_UNIT_METHOD_CALLS)
+        fprintf(stderr, "BasicNavigator: stop()\n");
 
     // Stop any kind of throttle
     NavKillThrottle();
@@ -55,6 +60,10 @@ void stop(struct Navigator *self){
 }
 
 void land(struct Navigator *self){
+
+    // Log status update of navigator
+    if(LOG_UNIT_METHOD_CALLS)
+        fprintf(stderr, "BasicNavigator: land()\n");
 
     // Check whether the autopilot is in flight mode
     if(autopilot_in_flight()){
@@ -72,7 +81,8 @@ void land(struct Navigator *self){
 void takeoff(struct Navigator *self){
 
     // Log status update of navigator
-    fprintf(stderr, "BasicNavigator: takeoff()\n");
+    if(LOG_UNIT_METHOD_CALLS)
+        fprintf(stderr, "BasicNavigator: takeoff()\n");
 
     // Check if the autopilot is not in flight mode already
     if(!autopilot_in_flight()){

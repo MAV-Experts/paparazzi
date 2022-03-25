@@ -16,10 +16,17 @@
 #define PAPARAZZI_AUTONOMOUSVEHICLE_H
 
 // The dimensions of the matrix that detector and navigator exchange
-#define MATRIX_DIMENSIONS_HORIZONTAL 3
-#define MATRIX_DIMENSIONS_VERTICAL 2
+#define MATRIX_COLS 3
+#define MATRIX_ROWS 2
 
+// Number of system iterations until the MAV will take off and start operations
 #define MIN_SYSTEM_ITERATIONS_TILL_TAKEOFF 2
+
+// Set this to true when you want to have every method call logged
+#define LOG_UNIT_METHOD_CALLS true
+
+// Set this to true when you want to have every system state transition logged
+#define LOG_STATE_TRANSITIONS true
 
 /**
  * Possible states of the MAV instance

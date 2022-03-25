@@ -2,6 +2,8 @@
 /doc/generated
 /doc/manual/generated
 
+.vscode
+
 *.so
 *.[oa]
 *.out

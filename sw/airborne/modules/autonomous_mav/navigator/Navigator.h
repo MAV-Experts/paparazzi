@@ -5,6 +5,8 @@
 #ifndef PAPARAZZI_NAVIGATOR_H
 #define PAPARAZZI_NAVIGATOR_H
 
+#include "../obstacle_detector/ObstacleDetector.h"
+
 /**
  * The states that the Navigator can be in
  */
@@ -50,7 +52,7 @@ struct Navigator {
      * @param self reference to object
      * @param obstacleMap 2D map normalized world map ahead
      */
-    void (*computePath)(struct Navigator *self, int obstacleMap);
+    void (*computePath)(struct Navigator *self, struct DATA_MATRIX obstacleMap);
 
     /**
      * Method returns true when the navigator is experiencing any problems
