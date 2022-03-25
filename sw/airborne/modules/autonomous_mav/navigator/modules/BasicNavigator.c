@@ -23,16 +23,13 @@ void computePath(struct Navigator *self, struct DATA_MATRIX obstacleMap){
     autopilot_mode_auto2 = AP_MODE_GUIDED;
     autopilot_static_set_mode(AP_MODE_GUIDED);
 
-    // Print the current autopilot mode
-    fprintf(stderr, "Autopilot mode: %d\n", autopilot.mode);
-
     // TODO: use the obstacleMap to compute an amazing next waypoint
 
     // Set forward speed
-    guidance_h_set_guided_body_vel(0.5, 0);
+    guidance_h_set_guided_body_vel(12, 0);
 
     // Set a heading
-    guidance_h_set_guided_heading(14);
+    guidance_h_set_guided_heading(52);
 
 }
 
@@ -110,24 +107,20 @@ void takeoff(struct Navigator *self){
     // Check if the autopilot is not in flight mode already
     if(!autopilot_in_flight()){
 
-        fprintf(stderr, "Start engines and takeoff\n");
-
-        // Turn on motors of aircraft
+        // Start engines
         NavResurrect();
 
-        // Set the climb waypoint
-//        NavSetWaypointHere(WP_CLIMB);
+        // Set v speed
+        nav_climb_vspeed = 10;
 
-        NavVerticalAutoThrottleMode(0);
-        NavVerticalAltitudeMode(500, 0);
-//        NavVerticalClimbMode(50, 0);
+        // Set current location as the waypoint to be at
+        NavSetWaypointHere(WP_CLIMB);
 
-//        navigation_SetFlightAltitude(1);
+        // Go to this waypoint
+        NavGotoWaypoint(WP_CLIMB);
 
-//        guidance_h_hover_enter();
-
-//        guidance_h_set_guided_pos(self->getPosition(self).x, self->getPosition(self).y);
-
+        // Ramp up throttle
+        NavVerticalAltitudeMode(300, 100);
 
     } else {
 

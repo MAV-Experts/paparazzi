@@ -24,6 +24,13 @@ extern void startSystem(void){
 }
 
 /**
+ * This will switch the global running variable "on"
+ */
+extern void stopSystem(void){
+    isRunning = false;
+}
+
+/**
  * Init function in Paparazzi loop
  */
 extern void autonomous_mav_init(void){
@@ -46,7 +53,8 @@ extern void autonomous_mav_init(void){
 extern void autonomous_mav_periodic(void){
 
     // Call the heartbeat method on the instance of the MAV
-    if(isRunning)
+    if(isRunning){
         mav.heartbeat(&mav);
+    }
 
 }
