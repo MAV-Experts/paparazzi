@@ -38,21 +38,11 @@ struct image_t * storeBottomImage(struct image_t *img, uint8_t filter){
 
 bool obstacleAhead(struct ObstacleDetector *self){
 
-    // TODO: compute whether there is an obstacle ahead
-
     // Log status update of navigator
     if(LOG_UNIT_METHOD_CALLS)
         fprintf(stderr, "BasicDetector: obstacleAhead()\n");
 
-    // via front_camera, one can use the struct of settings
-//    fprintf(stderr, "testing %s\n", front_camera.dev_name);
-
-//    fprintf(stderr, "Front image is %d x %d\n", frontImageBuffer.w, frontImageBuffer.h);
-//    fprintf(stderr, "Bottom image is %d x %d\n", bottomImageBuffer.w, bottomImageBuffer.h);
-//
-//    fprintf(stderr, "Current waypoint x: %f\n", waypoint_get_x(0));
-//    fprintf(stderr, "Current waypoint y: %f\n", waypoint_get_y(0));
-//    fprintf(stderr, "Current waypoint alt: %f\n", waypoint_get_alt(0));
+    // TODO: compute whether there is an obstacle ahead
 
     return false;
 }

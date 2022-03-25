@@ -7,24 +7,19 @@
 
 void heartbeat(struct MAV *self){
 
-    // Variable to see whether the 10 minutes are over TODO: still needs work (use flight time?)
-    bool timerIsDone = false;
-
-    // Variable containing information whether system is in guided flight mode
-//    bool inGuidedFlightMode = guidance_h.mode != GUIDANCE_H_MODE_GUIDED;
-    bool inGuidedFlightMode = true;
-
     // Create local variable for the next state
     enum STATE nextState = self->currentState;
 
     // Print a few status messages
-    fprintf(stderr, "\n--------------- Status -----------------\n");
-    fprintf(stderr, "Autopilot mode: %d\n", autopilot.mode);
-    fprintf(stderr, "Current guided mode: %d\n", guidance_h.mode);
-    fprintf(stderr, "Current position (%d-%d) at %d cm\n\n",
-            self->navigator->getPosition(self->navigator).x,
-            self->navigator->getPosition(self->navigator).y,
-            self->navigator->getPosition(self->navigator).alt);
+    if(LOG_SYSTEM_STATE){
+        fprintf(stderr, "\n--------------- Status -----------------\n");
+        fprintf(stderr, "Autopilot mode: %d\n", autopilot.mode);
+        fprintf(stderr, "Current guided mode: %d\n", guidance_h.mode);
+        fprintf(stderr, "Current position (%d-%d) at %d cm\n\n",
+                self->navigator->getPosition(self->navigator).x,
+                self->navigator->getPosition(self->navigator).y,
+                self->navigator->getPosition(self->navigator).alt);
+    }
 
     // Handle the state based actions and transitions
     switch (self->currentState) {
@@ -67,7 +62,7 @@ void heartbeat(struct MAV *self){
         case TAKEOFF:
 
             // State based action in takeoff
-            if(self->aircraftHasError(self) || !inGuidedFlightMode)
+            if(self->aircraftHasError(self))
                 nextState = FATAL_ERROR;
 
             // If the autopilot is in flight mode, switch to normal maneuvers
@@ -82,39 +77,36 @@ void heartbeat(struct MAV *self){
             // Compute route
             self->navigator->computePath(self->navigator, self->detector->getObstacleMap(self->detector));
             // State based action in normal movement
-//            if(self->aircraftHasError(self) || timerIsDone)
-//                nextState = LANDING;
-//            if(self->detector->obstacleAhead(self->detector))
-//                nextState = EVASIVE_MOVEMENT;
-//            if(self->detector->outOfArena(self->detector))
-//                nextState = REENTER_MOVEMENT;
-
-            if(!inGuidedFlightMode)
-                nextState = FATAL_ERROR;
+            if(self->aircraftHasError(self) || (autopilot.flight_time > MAX_FLIGHT_TIME))
+                nextState = LANDING;
+            if(self->detector->obstacleAhead(self->detector))
+                nextState = EVASIVE_MOVEMENT;
+            if(self->detector->outOfArena(self->detector))
+                nextState = REENTER_MOVEMENT;
 
             break;
 
         case REENTER_MOVEMENT:
-            // Compute reenter route TODO: there should be another endpoint for computing reentry path
+            // Compute reenter route
             self->navigator->computePath(self->navigator, self->detector->getObstacleMap(self->detector));
+            if(self->aircraftHasError(self) || (autopilot.flight_time > MAX_FLIGHT_TIME))
+                nextState = LANDING;
             if(!self->detector->outOfArena(self->detector))
                 nextState = NORMAL_MOVEMENT;
-            if(!inGuidedFlightMode)
-                nextState = FATAL_ERROR;
+            if(self->detector->obstacleAhead(self->detector))
+                nextState = EVASIVE_MOVEMENT;
             break;
 
         case EVASIVE_MOVEMENT:
             // Compute path
             self->navigator->computePath(self->navigator, self->detector->getObstacleMap(self->detector));
             // State transitions
-            if(self->aircraftHasError(self) || timerIsDone)
+            if(self->aircraftHasError(self) || (autopilot.flight_time > MAX_FLIGHT_TIME))
                 nextState = LANDING;
             if(!self->detector->obstacleAhead(self->detector) && !(self->aircraftHasError(self)))
                 nextState = NORMAL_MOVEMENT;
-            if(!self->detector->obstacleAhead(self->detector) && self->detector->outOfArena(self->detector) && !(self->aircraftHasError(self)))
+            if(!self->detector->obstacleAhead(self->detector) && self->detector->outOfArena(self->detector))
                 nextState = REENTER_MOVEMENT;
-            if(!inGuidedFlightMode)
-                nextState = FATAL_ERROR;
             break;
 
         case DONE:
@@ -128,6 +120,7 @@ void heartbeat(struct MAV *self){
 
     }
 
+    // Handle state transitions
     if(self->currentState != nextState){
 
         // Log the transition of MAV states
@@ -200,7 +193,7 @@ void heartbeat(struct MAV *self){
 
 int aircraftHasError(struct MAV *self){
 
-    // TODO: check whether the aircraft is experiencing any errors
+    // TODO: check whether the aircraft is experiencing any errors (e.g. low battery, GPS loss etc.)
 
     return 0;
 }

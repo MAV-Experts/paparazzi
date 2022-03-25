@@ -25,10 +25,10 @@ void computePath(struct Navigator *self, struct DATA_MATRIX obstacleMap){
 
     // TODO: use the obstacleMap to compute an amazing next waypoint
 
-    // Set forward speed
+    // Set forward speed FIXME: randomly set something for now
     guidance_h_set_guided_body_vel(12, 0);
 
-    // Set a heading
+    // Set a heading FIXME: randomly set something for now
     guidance_h_set_guided_heading(52);
 
 }
@@ -38,6 +38,8 @@ int hasError(struct Navigator *self){
     // Log status update of navigator
     if(LOG_UNIT_METHOD_CALLS)
         fprintf(stderr, "BasicNavigator: hasError()\n");
+
+    // TODO: implement some checking of internal variables or so (if needed)
 
     return 0;
 }
@@ -65,11 +67,6 @@ void stop(struct Navigator *self){
     // Stop any kind of throttle
     NavKillThrottle();
 
-    // Set the autopilot mode back to NAV
-    autopilot_mode_auto2 = AP_MODE_NAV;
-    autopilot_set_mode(AP_MODE_NAV);
-
-    // TODO: implement
 }
 
 void land(struct Navigator *self) {

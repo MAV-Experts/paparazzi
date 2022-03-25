@@ -26,6 +26,12 @@
 // The target altitude to do the course on
 #define TARGET_FLIGHT_ALTITUDE 200
 
+// Competitino is 10 minutes ~ 600 seconds
+#define MAX_FLIGHT_TIME 600
+
+// Set this to true when you want to have every method call logged
+#define LOG_SYSTEM_STATE true
+
 // Set this to true when you want to have every method call logged
 #define LOG_UNIT_METHOD_CALLS true
 
