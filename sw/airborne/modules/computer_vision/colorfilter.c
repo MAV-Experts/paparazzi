@@ -43,15 +43,27 @@ PRINT_CONFIG_VAR(COLORFILTER_SEND_OBSTACLE)
 struct video_listener *listener = NULL;
 
 // Filter Settings
-uint8_t color_lum_min = 105;
-uint8_t color_lum_max = 205;
-uint8_t color_cb_min  = 52;
-uint8_t color_cb_max  = 140;
-uint8_t color_cr_min  = 180;
-uint8_t color_cr_max  = 255;
+uint8_t color_lum_min1 = 105;
+uint8_t color_lum_max1 = 205;
+uint8_t color_cb_min1  = 52;
+uint8_t color_cb_max1  = 140;
+uint8_t color_cr_min1  = 180;
+uint8_t color_cr_max1  = 255;
 
 // Result
-volatile int color_count = 0;
+volatile int color_count_orange = 0;
+
+//Filter for white
+
+uint8_t color_lum_min2 = 230;
+uint8_t color_lum_max2 = 255;
+uint8_t color_cb_min2  = 0;
+uint8_t color_cb_max2  = 0;
+uint8_t color_cr_min2  = 0;
+uint8_t color_cr_max2  = 0;
+
+// Result
+volatile int color_count_white = 0;
 
 #include "modules/core/abi.h"
 
@@ -59,15 +71,27 @@ volatile int color_count = 0;
 static struct image_t *colorfilter_func(struct image_t *img, uint8_t camera_id __attribute__((unused)))
 {
   // Filter
-  color_count = image_yuv422_colorfilt(img, img,
+  color_count_orange = image_yuv422_colorfilt(img, img,
+                                       color_lum_min, color_lum_max,
+                                       color_cb_min, color_cb_max,
+                                       color_cr_min, color_cr_max
+                                      );
+color_count_white = image_yuv422_colorfilt(img, img,
                                        color_lum_min, color_lum_max,
                                        color_cb_min, color_cb_max,
                                        color_cr_min, color_cr_max
                                       );
 
   if (COLORFILTER_SEND_OBSTACLE) {
-    if (color_count > 20)
+    if (color_count_orange > 20 || color_count_white > 20)
     {
+      if (color_count_orange > color_count_white){
+        color_count_orange = color_count
+      }
+      else
+      {
+        color_count_white = color_count
+      }
       AbiSendMsgOBSTACLE_DETECTION(OBS_DETECTION_COLOR_ID, 1.f, 0.f, 0.f);
     }
     else
