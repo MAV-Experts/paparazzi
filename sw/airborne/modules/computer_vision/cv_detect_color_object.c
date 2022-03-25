@@ -44,6 +44,9 @@ uint8_t cod_cb_max2 = 0;
 uint8_t cod_cr_min2 = 0;
 uint8_t cod_cr_max2 = 0;
 
+int print_count = 0;
+int dY_total = 0;
+
 bool cod_draw1 = false;
 bool cod_draw2 = false;
 
@@ -122,9 +125,9 @@ static struct image_t *object_detector(struct image_t *img, uint8_t filter)
   detected_counts = find_object_centroid(img, &x_c, &y_c, draw, lum_min, lum_max, cb_min, cb_max, cr_min, cr_max);
 
   // Print object count en treshold, print image centre
-  VERBOSE_PRINT("Color count %d: %u, threshold %u, x_c %d, y_c %d\n", camera, object_count, count_threshold, x_c, y_c);
-  VERBOSE_PRINT("centroid %d: (%d, %d) r: %4.2f a: %4.2f\n", camera, x_c, y_c,
-        hypotf(x_c, y_c) / hypotf(img->w * 0.5, img->h * 0.5), RadOfDeg(atan2f(y_c, x_c)));
+  // VERBOSE_PRINT("Color count %d: %u, threshold %u, x_c %d, y_c %d\n", camera, object_count, count_threshold, x_c, y_c);
+  // VERBOSE_PRINT("centroid %d: (%d, %d) r: %4.2f a: %4.2f\n", camera, x_c, y_c,
+        // hypotf(x_c, y_c) / hypotf(img->w * 0.5, img->h * 0.5), RadOfDeg(atan2f(y_c, x_c)));
 
   // storing the results from find_object in the global variables. 
   //lock the mutual exclusion
@@ -142,13 +145,17 @@ static struct image_t *object_detector(struct image_t *img, uint8_t filter)
   global_zone_counts.white_zone3 = detected_counts.white_zone3;
   // store the orange counts in the right zones
   global_zone_counts.orange_zone1 = detected_counts.orange_zone1;
-  global_zone_counts.orange_zone1 = detected_counts.orange_zone2;
-  global_zone_counts.orange_zone1 = detected_counts.orange_zone3;
+  global_zone_counts.orange_zone2 = detected_counts.orange_zone2;
+  global_zone_counts.orange_zone3 = detected_counts.orange_zone3;
   // store the edge counts in the right zones
   global_zone_counts.edge_zone1 = detected_counts.edge_zone1;
-  global_zone_counts.edge_zone1 = detected_counts.edge_zone2;
-  global_zone_counts.edge_zone1 = detected_counts.edge_zone3;
+  global_zone_counts.edge_zone2 = detected_counts.edge_zone2;
+  global_zone_counts.edge_zone3 = detected_counts.edge_zone3;
   // tell the periodic function that there is new information to send. 
+  if(print_count % 25 == 0){
+    PRINT("DETECTED_COUNTS.EDGE_ZONE1 = %u edges on the left\n", detected_counts.edge_zone1);
+    PRINT("GLOBAL_ZONE_COUNTS.EDGE_ZONE1 = %u edges on the left\n", global_zone_counts.edge_zone1);
+  }
   global_zone_counts.updated = true;
   //unlock the mutual exclusion
   pthread_mutex_unlock(&mutex);
@@ -247,14 +254,18 @@ struct object_counts_t find_object_centroid(struct image_t *img, int32_t* p_xc, 
   uint8_t *buffer = img->buf;
   uint8_t previous_Y = 0;
   int32_t dY = 0; 
-  uint8_t edge_threshhold = 0;
+  float edge_threshhold = 18.0;
   struct object_counts_t counts;          // the array that stores the # of orange pixels and zone counts. 
+  counts.edge_zone1 = 0;
+  counts.edge_zone2 = 0;
+  counts.edge_zone3 = 0;
   uint16_t bin_size = img->w / 3;     // # of bins/zones in the image set to 3. 
   // Go through all the pixels
   // move along the y axis
   for (uint16_t y = 0; y < img->h; y++) {
 	//for each row the previous illumation  0;
 	previous_Y = 0;
+  dY_total = 0;
 	dY = 0;
 	//move along the x axis
     for (uint16_t x = 0; x < img->w; x ++) {
@@ -304,8 +315,9 @@ struct object_counts_t find_object_centroid(struct image_t *img, int32_t* p_xc, 
 
         //Calculate difference in pixel lumination
         dY = abs(yp_cache - previous_Y);
+        dY_total += dY;
         //Check if the difference above a certain treshhold
-       if(dY >= edge_threshhold)
+       if((float) dY >= edge_threshhold)
         {
         	// Find where the edge is
     	   if(x <= bin_size ) //x >= 0 && 
@@ -348,6 +360,12 @@ struct object_counts_t find_object_centroid(struct image_t *img, int32_t* p_xc, 
   }
 
   //Return the pixel count
+  // if(print_count % 25 == 0){
+  //   PRINT("For this image, there are %u edges on the left\n", counts.edge_zone1);
+  //   PRINT("AVERAGE dY: %lf.", (float) dY_total / (float) cnt);
+  //   PRINT("Current dY is %i", dY);
+  // }
+  print_count++;
   return counts;
 }
 
@@ -388,10 +406,13 @@ void color_object_detector_periodic(void)
   
   if(local_zone_counts.updated){
 	  // send message with zone counts
+    if(print_count % 25 == 0){
+      PRINT("SEND MESSAGE: %u edges on the left\n", global_zone_counts.edge_zone1);
+    }
     AbiSendMsgZONE_COUNTS(ZONE_COUNTS_ID, 
-    local_zone_counts.white_zone1, local_zone_counts.white_zone2, local_zone_counts.white_zone3, 
-    local_zone_counts.orange_zone1, local_zone_counts.orange_zone2, local_zone_counts.orange_zone3,
-    local_zone_counts.edge_zone1, local_zone_counts.edge_zone2, local_zone_counts.edge_zone3);
+    global_zone_counts.white_zone1, global_zone_counts.white_zone2, global_zone_counts.white_zone3, 
+    global_zone_counts.orange_zone1, global_zone_counts.orange_zone2, global_zone_counts.orange_zone3,
+    global_zone_counts.edge_zone1, global_zone_counts.edge_zone2, global_zone_counts.edge_zone3);
     
     local_zone_counts.updated = false; // tell the programm that the message is send.
   }
