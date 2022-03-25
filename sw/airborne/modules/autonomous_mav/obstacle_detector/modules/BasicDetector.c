@@ -90,6 +90,7 @@ struct ObstacleDetector createBasicDetector(){
     instance.obstacleAhead = obstacleAhead;
     instance.getObstacleMap = getObstacleMap;
     instance.hasDetectionError = hasDetectionError;
+    instance.outOfArena = outOfArena;
 
     // TODO: invent great way of appending images here
 //    instance.currentBottomImage = bottomImageBuffer;
