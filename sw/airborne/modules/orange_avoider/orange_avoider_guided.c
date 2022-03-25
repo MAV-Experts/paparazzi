@@ -123,23 +123,16 @@ static void floor_detection_cb(uint8_t __attribute__((unused)) sender_id,
   floor_centroid = pixel_y;
 }
 
-int print_count2 = 0;
 
 #ifndef ZONE_COUNTS_ID
 #endif
 static abi_event edge_detection_ev;
 static void edge_detection_cb(uint8_t __attribute__((unused)) sender_id,
-                              uint32_t white_zone1, uint32_t white_zone2,
-                              uint32_t white_zone3, uint32_t orange_zone1, uint32_t orange_zone2,
-                              uint32_t orange_zone3, uint32_t edge_zone1, uint32_t edge_zone2,
-                              uint32_t edge_zone3)
+                              int32_t white_zone1, int32_t white_zone2,
+                              int32_t white_zone3, int32_t orange_zone1, int32_t orange_zone2,
+                              int32_t orange_zone3, int32_t edge_zone1, int32_t edge_zone2,
+                              int32_t edge_zone3)
 {
-<<<<<<< HEAD
-  if (print_count2 % 3 == 0){
-    VERBOSE_PRINT("Received edge_zone1: %u.\n", edge_zone1);
-  }
-  print_count2++;
-=======
   // setting up the message system to be able to troubleshoot.
   g_global_zone_counts.white_zone1 = white_zone1;
   g_global_zone_counts.white_zone2 = white_zone2;
@@ -153,7 +146,6 @@ static void edge_detection_cb(uint8_t __attribute__((unused)) sender_id,
   g_global_zone_counts.edge_zone2 = edge_zone2;
   g_global_zone_counts.edge_zone3 = edge_zone3;
 
->>>>>>> becf6e4ccc2af3c405c30f52b4c3e07ac31048b6
   edge_number[0] = 0.4 * white_zone1 + 0.4 * orange_zone1 + 0.2 * edge_zone1;
   edge_number[1] = 0.4 * white_zone2 + 0.4 * orange_zone2 + 0.2 * edge_zone2;
   edge_number[2] = 0.4 * white_zone3 + 0.4 * orange_zone3 + 0.2 * edge_zone3;
@@ -206,14 +198,10 @@ void orange_avoider_guided_periodic(void)
   // VERBOSE_PRINT("Floor count: %d, threshold: %d\n", floor_count, floor_count_threshold);
   // VERBOSE_PRINT("Floor centroid: %f\n", floor_centroid_frac);
 
-<<<<<<< HEAD
-  // VERBOSE_PRINT("Obstacle_count: %d  threshold: %d state: %d \n", obstacle_count, obstacle_count_threshold, navigation_state);
-=======
 // printing trouble shoot messages.
   VERBOSE_PRINT("\n white: \n left=%d \n center=%d \n right=%d \n ", g_global_zone_counts.white_zone1, g_global_zone_counts.white_zone2, g_global_zone_counts.white_zone3);
   VERBOSE_PRINT("\n orange: \n left=%d \n center=%d \n right=%d \n ", g_global_zone_counts.orange_zone1, g_global_zone_counts.orange_zone2, g_global_zone_counts.orange_zone3);
   VERBOSE_PRINT("\n edge: \n left=%d \n center=%d \n right=%d \n ", g_global_zone_counts.edge_zone1, g_global_zone_counts.edge_zone2, g_global_zone_counts.edge_zone3);
->>>>>>> becf6e4ccc2af3c405c30f52b4c3e07ac31048b6
 
 
   // update our safe confidence using color threshold
@@ -226,7 +214,7 @@ void orange_avoider_guided_periodic(void)
   // bound obstacle_free_confidence
   Bound(obstacle_free_confidence, 0, max_trajectory_confidence);
 
-  // VERBOSE_PRINT("Obstacle free confidence: %d \n", obstacle_free_confidence);
+  VERBOSE_PRINT("Obstacle free confidence: %d \n", obstacle_free_confidence);
 
   // float speed_sp = fminf(oag_max_speed, 0.2f * obstacle_free_confidence);
   float speed_sp = oag_max_speed * obstacle_free_confidence / max_trajectory_confidence;
