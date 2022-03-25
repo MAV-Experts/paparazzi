@@ -21,7 +21,7 @@ void heartbeat(struct MAV *self){
     fprintf(stderr, "\n--------------- Status -----------------\n");
     fprintf(stderr, "Autopilot mode: %d\n", autopilot.mode);
     fprintf(stderr, "Current guided mode: %d\n", guidance_h.mode);
-    fprintf(stderr, "Current position (%d-%d) at %d meters\n\n",
+    fprintf(stderr, "Current position (%d-%d) at %d cm\n\n",
             self->navigator->getPosition(self->navigator).x,
             self->navigator->getPosition(self->navigator).y,
             self->navigator->getPosition(self->navigator).alt);

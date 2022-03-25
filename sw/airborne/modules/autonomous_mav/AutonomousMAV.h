@@ -24,7 +24,7 @@
 #define MIN_SYSTEM_ITERATIONS_TILL_TAKEOFF 2
 
 // The target altitude to do the course on
-#define TARGET_FLIGHT_ALTITUDE 300
+#define TARGET_FLIGHT_ALTITUDE 200
 
 // Set this to true when you want to have every method call logged
 #define LOG_UNIT_METHOD_CALLS true

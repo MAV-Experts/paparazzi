@@ -75,10 +75,10 @@
 <!--&lt;!&ndash;            <stay wp="STDBY"/>&ndash;&gt;-->
 <!--        </block>-->
         <block key="g" name="START" strip_button="Go" strip_icon="lookfore.png">
-            <while cond="!GpsFixValid()"/>
-            <call_once fun="NavSetWaypointHere(WP_STDBY)"/>
-            <stay wp="STDBY"/>
-            <call_once fun="setGuided()"/>
+<!--            <while cond="!GpsFixValid()"/>-->
+<!--            <call_once fun="NavSetWaypointHere(WP_STDBY)"/>-->
+<!--            <stay wp="STDBY"/>-->
+<!--            <call_once fun="setGuided()"/>-->
             <call_once fun="startSystem()"/>
         </block>
 <!--        <block key="l" name="land here" strip_button="Land Here" strip_icon="land-right.png">-->
