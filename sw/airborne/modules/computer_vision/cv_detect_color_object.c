@@ -130,7 +130,7 @@ static struct image_t *object_detector(struct image_t *img, uint8_t filter)
   //lock the mutual exclusion
   pthread_mutex_lock(&mutex);
   //color count
-  global_filters[filter-1].color_count = detected_counts.orange_zone1; // store the orange value of the struct this is incorrect and is just here to make it compile
+  global_filters[filter-1].color_count = detected_counts.orange_zone1+detected_counts.orange_zone2+detected_counts.orange_zone3; // store the orange value of the struct this is incorrect and is just here to make it compile
   global_filters[filter-1].x_c = x_c;
   global_filters[filter-1].y_c = y_c;
   //updated
@@ -246,11 +246,11 @@ struct object_counts_t find_object_centroid(struct image_t *img, int32_t* p_xc, 
   uint8_t *we = img->buf;
   uint8_t *buffer = img->buf;
   
-  draw_orange = false;
-  bool draw_white = true;
+  draw_orange = true;
+  bool draw_white = false;
   bool draw_edges = true;
 
-  uint32_t white_threshold = 235;     // set higher to detect less white
+  uint32_t white_threshold = 232;     // set higher to detect less white
   uint8_t edge_threshhold = 18;        // set higher to detect less edges
 
   int32_t previous_Y;
@@ -270,6 +270,9 @@ struct object_counts_t find_object_centroid(struct image_t *img, int32_t* p_xc, 
   for (uint16_t y = 0; y < img->h; y++) {
 	//initializing variables to 0 every row.
 	yp_cache = 0;
+  uint32_t up_cache = 0;
+  uint32_t vp_cache = 0;
+
 	dY = 0;
   previous_Y = 0;
   //clean the memory list
@@ -298,6 +301,8 @@ struct object_counts_t find_object_centroid(struct image_t *img, int32_t* p_xc, 
       }
 
       yp_cache = *yp; // store the value of yp to be able to overwrite it for visualization.
+      up_cache = *up;
+      vp_cache = *vp;
 
       // Check between minimum and maximum values of the colors
       if ((*yp >= lum_min) && (*yp <= lum_max) &&
@@ -333,7 +338,9 @@ struct object_counts_t find_object_centroid(struct image_t *img, int32_t* p_xc, 
         
       *yp = 0;
       /*Jonathan Dijkstra - white detector using absolute illuminance pixel values */
-      if(yp_cache >= white_threshold)
+      if( (yp_cache >= 233) && (yp_cache <= 255) &&
+          (up_cache >= 122 ) && (up_cache <= 134) &&
+          (vp_cache >= 122 ) && (vp_cache <= 134 ))
       {
         // put the whtie pixel in the right zone. 
         if(y <= bin_size ) 
