@@ -7,7 +7,7 @@
 void init(struct ObstacleDetector *self){
 
     // Print message about startup of detector
-    fprintf(stderr, "Initializing the basic obstacle detector ...\n");
+    fprintf(stderr, "BasicDetector: init()\n");
 
     // Register image feed listeners
     cv_add_to_device(&DETECTOR_FRONT_CAMERA, storeFrontImage, DETECTOR_FPS, 0);
@@ -29,13 +29,26 @@ int obstacleAhead(struct ObstacleDetector *self){
 
     // TODO: compute whether there is an obstacle ahead
 
-    fprintf(stderr, "Front image is %d x %d\n", frontImageBuffer.w, frontImageBuffer.h);
-    fprintf(stderr, "Bottom image is %d x %d\n", bottomImageBuffer.w, bottomImageBuffer.h);
+    // Log status update of navigator
+    fprintf(stderr, "BasicDetector: obstacleAhead()\n");
+
+    // via front_camera, one can use the struct of settings
+//    fprintf(stderr, "testing %s\n", front_camera.dev_name);
+
+//    fprintf(stderr, "Front image is %d x %d\n", frontImageBuffer.w, frontImageBuffer.h);
+//    fprintf(stderr, "Bottom image is %d x %d\n", bottomImageBuffer.w, bottomImageBuffer.h);
+//
+//    fprintf(stderr, "Current waypoint x: %f\n", waypoint_get_x(0));
+//    fprintf(stderr, "Current waypoint y: %f\n", waypoint_get_y(0));
+//    fprintf(stderr, "Current waypoint alt: %f\n", waypoint_get_alt(0));
 
     return 0;
 }
 
 int getObstacleMap(struct ObstacleDetector *self){
+
+    // Log status update of navigator
+    fprintf(stderr, "BasicDetector: getObstacleMap()\n");
 
     // TODO: implement
 
@@ -44,12 +57,18 @@ int getObstacleMap(struct ObstacleDetector *self){
 
 int hasDetectionError(struct ObstacleDetector *self){
 
+    // Log status update of navigator
+    fprintf(stderr, "BasicDetector: hasDetectionError()\n");
+
     // TODO: implement
 
     return 0;
 }
 
 int outOfArena(struct ObstacleDetector *self){
+
+    // Log status update of navigator
+    fprintf(stderr, "BasicDetector: outOfArena()\n");
 
     // TODO: implement
 
@@ -67,6 +86,7 @@ struct ObstacleDetector createBasicDetector(){
     instance.getObstacleMap = getObstacleMap;
     instance.hasDetectionError = hasDetectionError;
 
+    // TODO: invent great way of appending images here
 //    instance.currentBottomImage = bottomImageBuffer;
 //    instance.currentFrontImage = frontImageBuffer;
 

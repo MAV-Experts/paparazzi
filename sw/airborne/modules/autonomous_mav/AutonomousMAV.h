@@ -4,6 +4,12 @@
 
 #include "navigator/Navigator.h"
 #include "obstacle_detector/ObstacleDetector.h"
+#include "../../autopilot.h"
+#include "../nav/waypoints.h"
+#include "generated/airframe.h"
+#include "generated/flight_plan.h"
+#include "../gps/gps.h"
+#include "../../firmwares/rotorcraft/navigation.h"
 #include <stdio.h>
 
 #ifndef PAPARAZZI_AUTONOMOUSVEHICLE_H
@@ -13,11 +19,13 @@
 #define MATRIX_DIMENSIONS_HORIZONTAL 3
 #define MATRIX_DIMENSIONS_VERTICAL 2
 
+#define MIN_SYSTEM_ITERATIONS_TILL_TAKEOFF 2
 
 /**
  * Possible states of the MAV instance
  */
 enum STATE {
+    BOOT,
     STARTUP,
     FATAL_ERROR,
     TAKEOFF,
@@ -32,6 +40,11 @@ enum STATE {
  * Define a struct that depicts an object of type MAV
  */
 struct MAV {
+
+    /**
+     * This variable stores the number of system iterations of the MAV instance
+     */
+    long iterationCounter;
 
     /**
      * Attribute that stores the current state of the system

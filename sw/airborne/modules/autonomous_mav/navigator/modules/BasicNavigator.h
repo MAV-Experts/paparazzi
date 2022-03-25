@@ -2,12 +2,20 @@
 // Created by theo on 24-03-22.
 //
 
+#include "../Navigator.h"
+
+#include "../../../../autopilot.h"
+#include "../../../../state.h"
+#include "../../../../firmwares/rotorcraft/navigation.h"
+#include "../../../nav/waypoints.h"
+#include "generated/airframe.h"
+#include "generated/flight_plan.h"
+#include <stdio.h>
+#include <stdbool.h>
+#include <stdint.h>
+
 #ifndef PAPARAZZI_BASICNAVIGATOR_H
 #define PAPARAZZI_BASICNAVIGATOR_H
-
-#include "../Navigator.h"
-#include <stdio.h>
-#include <stdint.h>
 
 enum NAV_STATES getState(struct Navigator *self);
 void computePath(struct Navigator *self, int obstacleMap);

@@ -13,22 +13,42 @@ void heartbeat(struct MAV *self){
     // Create local variable for the next state
     enum STATE nextState = self->currentState;
 
+    // TODO: remove me later (this is just for testing)
+    uint8_t wid = WP_TRAJECTORY;
+    fprintf(stderr, "AutonomousMAV: current waypoint %d is (%d, %d, %d)\n", wid, waypoint_get_x(wid), waypoint_get_y(wid), waypoint_get_alt(wid));
+    fprintf(stderr, "AutonomousMAV: autopilot in flight %d\n", autopilot.in_flight);
+    fprintf(stderr, "AutonomousMAV: autopilot motors on %d\n", autopilot.motors_on);
+
     // Handle the state based actions and transitions
     switch (self->currentState) {
 
+        case BOOT:
+
+            // Make sure nothing is running
+            self->navigator->stop(self->navigator);
+
+            // Do not do anything in boot state, just transition to startup state
+            nextState = STARTUP;
+            break;
+
         case STARTUP:
-            // Initialize the navigation unit
-            self->navigator->start(self->navigator);
-            // Initialize the obstacle detector
-            self->detector->init(self->detector);
+
+            // TODO: remove me later (this is just for testing)
+            fprintf(stderr, "AutonomousMAV: nav is in flight %d\n", nav_is_in_flight());
 
             // Check for transitions
             if(self->aircraftHasError(self)){
                 // If aircraft has a problem, go to fatal error directly
                 nextState = FATAL_ERROR;
             } else {
-                // After performing startup operations, directly transition to takeoff state
-                nextState = TAKEOFF;
+
+                // Check if GPS signal is there and valid
+                if(GpsFixValid() && (self->iterationCounter > MIN_SYSTEM_ITERATIONS_TILL_TAKEOFF)){
+
+                    // After performing startup operations, directly transition to takeoff state
+                    nextState = TAKEOFF;
+
+                }
 
                 // TODO: start the timer to measure when flight time is over
 
@@ -42,13 +62,12 @@ void heartbeat(struct MAV *self){
 
         case TAKEOFF:
 
-            // TODO: remove this later!! just for demo purposes
-            self->detector->obstacleAhead(self->detector);
-
             // State based action in takeoff
             if(self->aircraftHasError(self))
                 nextState = FATAL_ERROR;
-            if(self->navigator->getState(self->navigator) != NAV_NORMAL)
+
+            // If the autopilot is in flight mode, switch to normal maneuvers
+            if(autopilot_in_flight())
                 nextState = NORMAL_MOVEMENT;
 
         case LANDING:
@@ -105,20 +124,41 @@ void heartbeat(struct MAV *self){
         // Handle all entry actions of the following state
         switch (nextState) {
 
+            case BOOT:
+                break;
+
             case STARTUP:
+
+                // Initialize the navigation unit
+                self->navigator->start(self->navigator);
+
+                // Initialize the obstacle detector
+                self->detector->init(self->detector);
+
                 break;
 
             case FATAL_ERROR:
+
+                // Land the aircraft immediately
                 self->navigator->land(self->navigator);
+
+                // Stop the navigator
                 self->navigator->stop(self->navigator);
+
                 break;
 
             case TAKEOFF:
+
+                // Take off with the aircraft
                 self->navigator->takeoff(self->navigator);
+
                 break;
 
             case LANDING:
+
+                // Initiate landing of the aircraft
                 self->navigator->land(self->navigator);
+
                 break;
 
             case NORMAL_MOVEMENT:
@@ -137,7 +177,11 @@ void heartbeat(struct MAV *self){
 
         // Perform the state transition in the new state
         self->currentState = nextState;
+
     }
+
+    // Increment the number of system iterations by one
+    self->iterationCounter = self->iterationCounter + 1;
 
 }
 
@@ -154,7 +198,8 @@ struct MAV createMAV(struct Navigator * nav, struct ObstacleDetector * detector)
     struct MAV instance;
 
     // Initialize the attributes of the system
-    instance.currentState = STARTUP;
+    instance.currentState = BOOT;
+    instance.iterationCounter = 0;
     instance.navigator = nav;
     instance.detector = detector;
 

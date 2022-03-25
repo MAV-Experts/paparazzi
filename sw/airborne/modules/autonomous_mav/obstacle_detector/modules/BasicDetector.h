@@ -4,6 +4,9 @@
 
 #include "../ObstacleDetector.h"
 
+#include "../../../nav/waypoints.h"
+#include "../../../computer_vision/video_thread_nps.h"
+
 #ifndef PAPARAZZI_BASICDETECTOR_H
 #define PAPARAZZI_BASICDETECTOR_H
 

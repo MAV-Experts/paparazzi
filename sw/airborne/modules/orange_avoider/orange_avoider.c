@@ -64,7 +64,7 @@ const int16_t max_trajectory_confidence = 5; // number of consecutive negative o
 
 /*
  * This next section defines an ABI messaging event (http://wiki.paparazziuav.org/wiki/ABI), necessary
- * any time data calculated in another module needs to be accessed. Including the file where this external
+ * any time data calculated in another module needs to be accessed. Inclucolor_detection_evding the file where this external
  * data is defined is not enough, since modules are executed parallel to each other, at different frequencies,
  * in different threads. The ABI event is triggered every time new data is sent out, and as such the function
  * defined in this file does not need to be explicitly called, only bound in the init function
@@ -72,7 +72,7 @@ const int16_t max_trajectory_confidence = 5; // number of consecutive negative o
 #ifndef ORANGE_AVOIDER_VISUAL_DETECTION_ID
 #define ORANGE_AVOIDER_VISUAL_DETECTION_ID ABI_BROADCAST
 #endif
-static abi_event color_detection_ev;
+static abi_event ;
 static void color_detection_cb(uint8_t __attribute__((unused)) sender_id,
                                int16_t __attribute__((unused)) pixel_x, int16_t __attribute__((unused)) pixel_y,
                                int16_t __attribute__((unused)) pixel_width, int16_t __attribute__((unused)) pixel_height,

@@ -45,12 +45,12 @@ struct ObstacleDetector {
     /**
      * This attribute stores the current image of the front camera
      */
-    struct image_t * currentFrontImage;
+    struct image_t currentFrontImage;
 
     /**
      * This attribute stores the current image of the bottom camera
      */
-    struct image_t * currentBottomImage;
+    struct image_t currentBottomImage;
 
     /**
      * This method contains initialization stuff for the specific detector unit
