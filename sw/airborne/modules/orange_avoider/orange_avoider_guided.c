@@ -50,15 +50,29 @@ enum navigation_state_t {
   REENTER_ARENA
 };
 
+struct object_counts_t {
+   uint32_t white_zone1;
+   uint32_t white_zone2;
+   uint32_t white_zone3;
+   uint32_t orange_zone1;
+   uint32_t orange_zone2;
+   uint32_t orange_zone3;
+   uint32_t edge_zone1;
+   uint32_t edge_zone2;
+   uint32_t edge_zone3;
+   //bool updated; 
+};
+struct object_counts_t g_global_zone_counts = {0}; // guided global zone counts it is double declared in detect color object and guided.
+
 // define settings
 float oag_color_count_frac = 0.18f;       // obstacle detection threshold as a fraction of total of image
 float oag_floor_count_frac = 0.05f;       // floor detection threshold as a fraction of total of image
 float oag_max_speed = 1.0f;               // max flight speed [m/s]
 float oag_heading_rate = RadOfDeg(20.f);  // heading change setpoint for avoidance [rad/s]
 float obst_count_frac = 0.1f;
-int edges_left = 4500;
-int edges_center = 100;
-int edges_right = 5000;
+int edges_left = 0;//4500;
+int edges_center = 0;//100;
+int edges_right = 0;//5000;
 
 // define and initialise global variables
 int32_t obstacle_count = 0;
@@ -120,10 +134,26 @@ static void edge_detection_cb(uint8_t __attribute__((unused)) sender_id,
                               uint32_t orange_zone3, uint32_t edge_zone1, uint32_t edge_zone2,
                               uint32_t edge_zone3)
 {
+<<<<<<< HEAD
   if (print_count2 % 3 == 0){
     VERBOSE_PRINT("Received edge_zone1: %u.\n", edge_zone1);
   }
   print_count2++;
+=======
+  // setting up the message system to be able to troubleshoot.
+  g_global_zone_counts.white_zone1 = white_zone1;
+  g_global_zone_counts.white_zone2 = white_zone2;
+  g_global_zone_counts.white_zone3 = white_zone3;
+
+  g_global_zone_counts.orange_zone1 = orange_zone1;
+  g_global_zone_counts.orange_zone2 = orange_zone2;
+  g_global_zone_counts.orange_zone3 = orange_zone3;
+
+  g_global_zone_counts.edge_zone1 = edge_zone1;
+  g_global_zone_counts.edge_zone2 = edge_zone2;
+  g_global_zone_counts.edge_zone3 = edge_zone3;
+
+>>>>>>> becf6e4ccc2af3c405c30f52b4c3e07ac31048b6
   edge_number[0] = 0.4 * white_zone1 + 0.4 * orange_zone1 + 0.2 * edge_zone1;
   edge_number[1] = 0.4 * white_zone2 + 0.4 * orange_zone2 + 0.2 * edge_zone2;
   edge_number[2] = 0.4 * white_zone3 + 0.4 * orange_zone3 + 0.2 * edge_zone3;
@@ -153,10 +183,12 @@ void orange_avoider_guided_init(void)
  */
 void orange_avoider_guided_periodic(void)
 {
-  // edge_number[0] = edges_left;
-  // edge_number[1] = edges_center;
-  // edge_number[2] = edges_right;
   obstacle_count=edge_number[1];
+
+  edges_left = edge_number[0];
+  edges_center = edge_number[1];
+  edges_right = edge_number[2];
+
   // Only run the mudule if we are in the correct flight mode
   if (guidance_h.mode != GUIDANCE_H_MODE_GUIDED) {
     navigation_state = SEARCH_FOR_SAFE_HEADING;
@@ -174,7 +206,14 @@ void orange_avoider_guided_periodic(void)
   // VERBOSE_PRINT("Floor count: %d, threshold: %d\n", floor_count, floor_count_threshold);
   // VERBOSE_PRINT("Floor centroid: %f\n", floor_centroid_frac);
 
+<<<<<<< HEAD
   // VERBOSE_PRINT("Obstacle_count: %d  threshold: %d state: %d \n", obstacle_count, obstacle_count_threshold, navigation_state);
+=======
+// printing trouble shoot messages.
+  VERBOSE_PRINT("\n white: \n left=%d \n center=%d \n right=%d \n ", g_global_zone_counts.white_zone1, g_global_zone_counts.white_zone2, g_global_zone_counts.white_zone3);
+  VERBOSE_PRINT("\n orange: \n left=%d \n center=%d \n right=%d \n ", g_global_zone_counts.orange_zone1, g_global_zone_counts.orange_zone2, g_global_zone_counts.orange_zone3);
+  VERBOSE_PRINT("\n edge: \n left=%d \n center=%d \n right=%d \n ", g_global_zone_counts.edge_zone1, g_global_zone_counts.edge_zone2, g_global_zone_counts.edge_zone3);
+>>>>>>> becf6e4ccc2af3c405c30f52b4c3e07ac31048b6
 
 
   // update our safe confidence using color threshold

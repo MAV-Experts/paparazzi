@@ -75,7 +75,7 @@ struct object_counts_t {
    bool updated; 
 };
 // creating the variable where the counts are stored after the object detector function found them
-struct object_counts_t global_zone_counts;
+struct object_counts_t global_zone_counts = {0}; // initialize all values to 0.
 
 // Function, changed the function declaration to accomodate the struct
 struct object_counts_t find_object_centroid(struct image_t *img, int32_t* p_xc, int32_t* p_yc, bool draw,
@@ -121,7 +121,7 @@ static struct image_t *object_detector(struct image_t *img, uint8_t filter)
 
   // Filter and find centroid, declare a struct data type count to store values from the find_object_centroid function
   // stores the detected counts in the struct
-  struct object_counts_t detected_counts;
+  struct object_counts_t detected_counts = {0}; // initialize all values to 0
   detected_counts = find_object_centroid(img, &x_c, &y_c, draw, lum_min, lum_max, cb_min, cb_max, cr_min, cr_max);
 
   // Print object count en treshold, print image centre
@@ -247,14 +247,26 @@ struct object_counts_t find_object_centroid(struct image_t *img, int32_t* p_xc, 
                               uint8_t cb_min, uint8_t cb_max,
                               uint8_t cr_min, uint8_t cr_max)
 {
-  uint32_t cnt = 0;
+  uint16_t cnt = 0; // only here to make it compile.
   uint32_t tot_x = 0;
   uint32_t tot_y = 0;
   uint8_t *we = img->buf;
   uint8_t *buffer = img->buf;
-  uint8_t previous_Y = 0;
+  
+  int32_t slice;
+  int32_t previous_slice;
+  int32_t yp_mean;
+  int32_t yp_previous_mean;
+  int32_t yp_cache; // stores the yp value so the img value can be overwritten for visualization of the method.
   int32_t dY = 0; 
+<<<<<<< HEAD
   float edge_threshhold = 18.0;
+=======
+  uint32_t yp_memory_list[img->w]; // array of yp values used to reduce noice in edge detection. 
+  uint32_t edge_length = 8; // pixels over which is averaged to reduce noice. 
+  uint32_t white_threshold = 200;
+  uint8_t edge_threshhold = 0;
+>>>>>>> becf6e4ccc2af3c405c30f52b4c3e07ac31048b6
   struct object_counts_t counts;          // the array that stores the # of orange pixels and zone counts. 
   counts.edge_zone1 = 0;
   counts.edge_zone2 = 0;
@@ -263,17 +275,25 @@ struct object_counts_t find_object_centroid(struct image_t *img, int32_t* p_xc, 
   // Go through all the pixels
   // move along the y axis
   for (uint16_t y = 0; y < img->h; y++) {
+<<<<<<< HEAD
 	//for each row the previous illumation  0;
 	previous_Y = 0;
   dY_total = 0;
+=======
+	//initializing variables to 0 every row.
+	yp_cache = 0;
+>>>>>>> becf6e4ccc2af3c405c30f52b4c3e07ac31048b6
 	dY = 0;
+  //clean the memory list
+  memset(yp_memory_list, 0, img->w);
+
 	//move along the x axis
     for (uint16_t x = 0; x < img->w; x ++) {
 
       /*******Color detection *********/
       // Check if the color is inside the specified values
       uint8_t *yp, *up, *vp;
-      int32_t yp_cache;
+      
 
       if (x % 2 == 0) {
         // Even x
@@ -289,22 +309,64 @@ struct object_counts_t find_object_centroid(struct image_t *img, int32_t* p_xc, 
         yp = &buffer[y * 2 * img->w + 2 * x + 1];  // Y2
       }
 
+      yp_cache = *yp; // store the value of yp to be able to overwrite it for visualization.
+
       // Check between minimum and maximum values of the colors
       if ( (*yp >= lum_min) && (*yp <= lum_max) &&
            (*up >= cb_min ) && (*up <= cb_max ) &&
            (*vp >= cr_min ) && (*vp <= cr_max )) 
            {
-    	      //Increase the pixel count
-            cnt ++;
+    	      // put the orange pixel in the right zone. 
+            if(x <= bin_size )  
+            {
+              counts.orange_zone1++;
+            }
+            else if(x > bin_size && x<= (2 * bin_size))
+            {
+              counts.orange_zone2++;
+            }
+            else
+            {
+              counts.orange_zone3++;
+            }
+      
+            // vizualize the orange detection by making the pizel white.
+            if (draw)
+            {
+              *yp = 255;  // make pixel brighter in image
+            }
+
             //Add up aggregate of x and y values
             tot_x += x;
             tot_y += y;
            }
         
-        yp_cache = *yp; // store the value of yp to use in the edge algorthm. 
-        if (draw){
+      
+      /*Jonathan Dijkstra - white detector using absolute illuminance pixel values */
+      if(yp_cache >= white_threshold)
+      {
+        // put the whtie pixel in the right zone. 
+        if(x <= bin_size ) 
+        {
+          counts.white_zone1++;
+        }
+        else if(x > bin_size && x<= (2 * bin_size))
+        {
+          counts.white_zone2++;
+        }
+        else
+        {
+          counts.white_zone3++;
+        }
+
+        // visualize the white detection by making pixel brights
+        if (draw)
+        {
           *yp = 255;  // make pixel brighter in image
         }
+      }
+
+
 
         /**Jonathan Dijkstra - edge detector using and difference in y components
          * 1. Calculate difference in lumanination (Y value) between two adjecent pixels
@@ -313,38 +375,57 @@ struct object_counts_t find_object_centroid(struct image_t *img, int32_t* p_xc, 
          *
          * **/
 
+<<<<<<< HEAD
         //Calculate difference in pixel lumination
         dY = abs(yp_cache - previous_Y);
         dY_total += dY;
         //Check if the difference above a certain treshhold
        if((float) dY >= edge_threshhold)
+=======
+        /* store current illumination value in the memory array */
+      yp_memory_list[x] = yp_cache;
+
+      //Start detecting edges only when enough data is available
+      if((x + edge_length +1) > 0)
+      {
+        //collect all Y point in the edge length, and the previous ones
+        for(uint32_t i = x - edge_length; i < x; i++)
+>>>>>>> becf6e4ccc2af3c405c30f52b4c3e07ac31048b6
         {
-        	// Find where the edge is
-    	   if(x <= bin_size ) //x >= 0 && 
-    	   {
-    		  counts.edge_zone1++;
-    	   }
-    	   else if(x > bin_size && x<= (2 * bin_size))
-    	   {
-    		   counts.edge_zone2++;
-    	   }
-    	   else if(x > (2 * bin_size) && x<= (3 * bin_size))
-    	   {
-    		   counts.edge_zone3++;
-    	   }
-         // block that does two extra bins. which are not used
-         /*
-    	   else if(x > (3 * bin_size) && x<= (4 * bin_size))
-    	   {
-    		   counts.zone4++;
-    	   }
-    	   else
-    	   {
-    		   counts.zone5++;
-    	   }
-         */
+          slice += yp_memory_list[i];             // total of last 'edge_length' pixels.
+          previous_slice += yp_memory_list[i-1];
         }
-        previous_Y = yp_cache;
+        //calculate the mean of the slices
+        yp_mean = slice / edge_length;
+        yp_previous_mean = previous_slice / edge_length;
+      }
+
+      //Calculate lumination differences in slices
+      dY = abs(yp_mean - yp_previous_mean);
+      //Check if the difference above a certain treshhold
+      if(dY >= edge_threshhold)
+      {
+        // Find where the edge is
+        if(x <= bin_size ) //x >= 0 && 
+        {
+          counts.edge_zone1++;
+        }
+        else if(x > bin_size && x<= (2 * bin_size))
+        {
+          counts.edge_zone2++;
+        }
+        else
+        {
+          counts.edge_zone3++;
+        }
+
+        // visualize the edge detection by making pixel brights
+        if (draw)
+        {
+          *yp = 255;  // make pixel brighter in image
+        }
+
+      }
     }
   }
 
@@ -406,9 +487,15 @@ void color_object_detector_periodic(void)
   
   if(local_zone_counts.updated){
 	  // send message with zone counts
+<<<<<<< HEAD
     if(print_count % 25 == 0){
       PRINT("SEND MESSAGE: %u edges on the left\n", global_zone_counts.edge_zone1);
     }
+=======
+    // messages are send correctly i(jesse) checked
+
+    
+>>>>>>> becf6e4ccc2af3c405c30f52b4c3e07ac31048b6
     AbiSendMsgZONE_COUNTS(ZONE_COUNTS_ID, 
     global_zone_counts.white_zone1, global_zone_counts.white_zone2, global_zone_counts.white_zone3, 
     global_zone_counts.orange_zone1, global_zone_counts.orange_zone2, global_zone_counts.orange_zone3,
