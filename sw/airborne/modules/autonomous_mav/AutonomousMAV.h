@@ -5,18 +5,26 @@
 #include "navigator/Navigator.h"
 #include "obstacle_detector/ObstacleDetector.h"
 #include "../../autopilot.h"
-#include "../nav/waypoints.h"
+#include "../../firmwares/rotorcraft/guidance/guidance_h.h"
+#include "../gps/gps.h"
+#include "firmwares/rotorcraft/navigation.h"
+#include "modules/datalink/datalink.h"
+#include "modules/energy/electrical.h"
+#include "modules/radio_control/radio_control.h"
+#include "modules/ahrs/ahrs.h"
+#include "autopilot.h"
+#include <stdio.h>
 #include "generated/airframe.h"
 #include "generated/flight_plan.h"
-#include "../gps/gps.h"
-#include "../../firmwares/rotorcraft/navigation.h"
-#include <stdio.h>
 
 #ifndef PAPARAZZI_AUTONOMOUSVEHICLE_H
 #define PAPARAZZI_AUTONOMOUSVEHICLE_H
 
 // Number of system iterations until the MAV will take off and start operations
 #define MIN_SYSTEM_ITERATIONS_TILL_TAKEOFF 2
+
+// The target altitude to do the course on
+#define TARGET_FLIGHT_ALTITUDE 300
 
 // Set this to true when you want to have every method call logged
 #define LOG_UNIT_METHOD_CALLS true

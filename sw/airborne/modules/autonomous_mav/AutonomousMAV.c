@@ -7,16 +7,24 @@
 
 void heartbeat(struct MAV *self){
 
-    // Variable to see whether the 10 minutes are over TODO: still needs work
+    // Variable to see whether the 10 minutes are over TODO: still needs work (use flight time?)
     bool timerIsDone = false;
+
+    // Variable containing information whether system is in guided flight mode
+//    bool inGuidedFlightMode = guidance_h.mode != GUIDANCE_H_MODE_GUIDED;
+    bool inGuidedFlightMode = true;
 
     // Create local variable for the next state
     enum STATE nextState = self->currentState;
 
-//    // TODO: remove me later (this is just for testing)
-//    for(uint8_t wid = 0; wid < 14; wid++){
-//        fprintf(stderr, "AutonomousMAV: current waypoint %d is (%d, %d, %d)\n", wid, waypoint_get_x(wid), waypoint_get_y(wid), waypoint_get_alt(wid));
-//    }
+    // Print a few status messages
+    fprintf(stderr, "\n--------------- Status -----------------\n");
+    fprintf(stderr, "Autopilot mode: %d\n", autopilot.mode);
+    fprintf(stderr, "Current guided mode: %d\n", guidance_h.mode);
+    fprintf(stderr, "Current position (%d-%d) at %d meters\n\n",
+            self->navigator->getPosition(self->navigator).x,
+            self->navigator->getPosition(self->navigator).y,
+            self->navigator->getPosition(self->navigator).alt);
 
     // Handle the state based actions and transitions
     switch (self->currentState) {
@@ -38,8 +46,8 @@ void heartbeat(struct MAV *self){
                 nextState = FATAL_ERROR;
             } else {
 
-                // Check if GPS signal is there and valid
-                if(GpsFixValid() && (self->iterationCounter > MIN_SYSTEM_ITERATIONS_TILL_TAKEOFF)){
+                // Check if GPS signal is there and valid for 3D
+                if(GpsFixValid()){
 
                     // After performing startup operations, directly transition to takeoff state
                     nextState = TAKEOFF;
@@ -59,11 +67,11 @@ void heartbeat(struct MAV *self){
         case TAKEOFF:
 
             // State based action in takeoff
-            if(self->aircraftHasError(self))
+            if(self->aircraftHasError(self) || !inGuidedFlightMode)
                 nextState = FATAL_ERROR;
 
             // If the autopilot is in flight mode, switch to normal maneuvers
-            if(autopilot.in_flight)
+            if(autopilot.in_flight && (self->navigator->getPosition(self->navigator).alt > TARGET_FLIGHT_ALTITUDE))
                 nextState = NORMAL_MOVEMENT;
 
         case LANDING:
@@ -72,14 +80,18 @@ void heartbeat(struct MAV *self){
 
         case NORMAL_MOVEMENT:
             // Compute route
-//            self->navigator->computePath(self->navigator, self->detector->getObstacleMap(self->detector));
-//            // State based action in normal movement
+            self->navigator->computePath(self->navigator, self->detector->getObstacleMap(self->detector));
+            // State based action in normal movement
 //            if(self->aircraftHasError(self) || timerIsDone)
 //                nextState = LANDING;
 //            if(self->detector->obstacleAhead(self->detector))
 //                nextState = EVASIVE_MOVEMENT;
 //            if(self->detector->outOfArena(self->detector))
 //                nextState = REENTER_MOVEMENT;
+
+            if(!inGuidedFlightMode)
+                nextState = FATAL_ERROR;
+
             break;
 
         case REENTER_MOVEMENT:
@@ -87,6 +99,8 @@ void heartbeat(struct MAV *self){
             self->navigator->computePath(self->navigator, self->detector->getObstacleMap(self->detector));
             if(!self->detector->outOfArena(self->detector))
                 nextState = NORMAL_MOVEMENT;
+            if(!inGuidedFlightMode)
+                nextState = FATAL_ERROR;
             break;
 
         case EVASIVE_MOVEMENT:
@@ -99,6 +113,8 @@ void heartbeat(struct MAV *self){
                 nextState = NORMAL_MOVEMENT;
             if(!self->detector->obstacleAhead(self->detector) && self->detector->outOfArena(self->detector) && !(self->aircraftHasError(self)))
                 nextState = REENTER_MOVEMENT;
+            if(!inGuidedFlightMode)
+                nextState = FATAL_ERROR;
             break;
 
         case DONE:
@@ -115,7 +131,8 @@ void heartbeat(struct MAV *self){
     if(self->currentState != nextState){
 
         // Log the transition of MAV states
-        fprintf(stderr, "Autonomous MAV changed state: %d\n", nextState);
+        fprintf(stderr, "\n------------ Sate Transition --------------\n");
+        fprintf(stderr, "Autonomous MAV changed state to: %d\n", nextState);
 
         // Handle all entry actions of the following state
         switch (nextState) {

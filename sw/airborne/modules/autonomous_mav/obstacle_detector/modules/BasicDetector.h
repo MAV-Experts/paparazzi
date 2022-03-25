@@ -7,7 +7,8 @@
 
 #include "../ObstacleDetector.h"
 
-#include "../../../nav/waypoints.h"
+// #include "../../../nav/waypoints.h"
+#include "firmwares/rotorcraft/navigation.h"
 #include "../../../computer_vision/video_thread_nps.h"
 
 static struct image_t *storeFrontImage(struct image_t *img, uint8_t filter);

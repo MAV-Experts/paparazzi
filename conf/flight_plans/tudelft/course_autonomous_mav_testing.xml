@@ -7,23 +7,31 @@
         #include "modules/radio_control/radio_control.h"
         #include "modules/ahrs/ahrs.h"
         #define NPS_GAZEBO_WORLD "cyberzoo_orange_poles.world"
+        #include "autopilot.h"
+        inline void setNav(void){
+        autopilot_mode_auto2 = AP_MODE_NAV;
+        autopilot_static_set_mode(AP_MODE_NAV);
+        }
+        inline void setGuided(void){
+        autopilot_mode_auto2 = AP_MODE_GUIDED;
+        autopilot_static_set_mode(AP_MODE_GUIDED);
+        }
     </header>
     <waypoints>
         <waypoint lat="51.990631" lon="4.376796" name="HOME"/>
-        <waypoint name="CLIMB" x="1.9" y="1.0"/>
+        <waypoint name="CLIMB" x="1.9" y="1.0" alt="1.5"/>
         <waypoint name="STDBY" x="1.9" y="1.0"/>
-        <waypoint name="TD" x="0.8" y="-1.7"/>
+        <waypoint name="TD" x="0.8" y="-1.7" alt="0"/>
         <waypoint name="GOAL" x="1.9" y="1.0"/>
         <waypoint name="TRAJECTORY" x="1.9" y="1.0"/>
         <waypoint lat="51.9905834" lon="4.3767710" name="_CZ1"/>
         <waypoint lat="51.9906440" lon="4.3767060" name="_CZ2"/>
         <waypoint lat="51.9906860" lon="4.3768080" name="_CZ3"/>
         <waypoint lat="51.9906238" lon="4.3768729" name="_CZ4"/>
-
-        <waypoint lat="51.9905860" lon="4.3767712" name="_OZ1"/>
-        <waypoint lat="51.9906430" lon="4.3767110" name="_OZ2"/>
-        <waypoint lat="51.9906830" lon="4.3768048" name="_OZ3"/>
-        <waypoint lat="51.9906239" lon="4.3768684" name="_OZ4"/>
+        <waypoint lat="51.990595" lon="4.376779" name="_OZ1"/>
+        <waypoint lat="51.990640" lon="4.376734" name="_OZ2"/>
+        <waypoint lat="51.990667" lon="4.376804" name="_OZ3"/>
+        <waypoint lat="51.990623" lon="4.376850" name="_OZ4"/>
     </waypoints>
     <sectors>
         <sector color="red" name="CyberZoo">
@@ -77,58 +85,62 @@
     </exceptions>
     <blocks>
         <block name="Wait GPS">
-<!--            <call_once fun="NavKillThrottle()"/>-->
-<!--            <while cond="!GpsFixValid()"/>-->
+            <call_once fun="NavKillThrottle()"/>
+            <while cond="!GpsFixValid()"/>
         </block>
         <block name="Geo init">
-<!--            <while cond="LessThan(NavBlockTime(), 2)"/>-->
-<!--            <call_once fun="NavSetAltitudeReferenceHere()"/>-->
+            <while cond="LessThan(NavBlockTime(), 2)"/>
+            <call_once fun="NavSetAltitudeReferenceHere()"/>
         </block>
         <block name="Holding point">
-<!--            <call_once fun="NavKillThrottle()"/>-->
-<!--            <attitude pitch="0" roll="0" throttle="0" until="FALSE" vmode="throttle"/>-->
+            <call_once fun="NavKillThrottle()"/>
+            <attitude pitch="0" roll="0" throttle="0" until="FALSE" vmode="throttle"/>
         </block>
         <block key="r" name="Start Engine">
-<!--            <call_once fun="NavResurrect()"/>-->
-<!--            <attitude pitch="0" roll="0" throttle="0" until="FALSE" vmode="throttle"/>-->
-<!--            <call_once fun="NavResurrect()"/>-->
+            <call_once fun="NavResurrect()"/>
+            <attitude pitch="0" roll="0" throttle="0" until="FALSE" vmode="throttle"/>
+            <call_once fun="NavResurrect()"/>
         </block>
         <block key="t" name="Takeoff" strip_button="Takeoff" strip_icon="takeoff.png">
-<!--            <exception cond="GetPosAlt() @GT 0.8" deroute="Standby"/>-->
-<!--            <call_once fun="NavSetWaypointHere(WP_CLIMB)"/>-->
-<!--            <stay climb="nav_climb_vspeed" vmode="climb" wp="CLIMB"/>-->
+            <exception cond="GetPosAlt() @GT 0.8" deroute="Standby"/>
+            <call_once fun="NavSetWaypointHere(WP_CLIMB)"/>
+            <stay climb="nav_climb_vspeed" vmode="climb" wp="CLIMB" />
         </block>
         <block key="s" name="Standby" strip_button="Standby" strip_icon="home.png">
-<!--            <call_once fun="NavSetWaypointHere(WP_STDBY)"/>-->
-<!--            <stay wp="STDBY"/>-->
+            <call_once fun="NavSetWaypointHere(WP_STDBY)"/>
+            <stay wp="STDBY"/>
         </block>
         <block key="g" name="START" strip_button="Go" strip_icon="lookfore.png">
-<!--            <call_once fun="NavSetWaypointHere(WP_GOAL)"/>-->
-<!--            <stay wp="GOAL"/>-->
+            <call_once fun="setGuided()"/>
+            <call_once fun="startSystem()"/>
+            <stay wp="STDBY"/>
         </block>
         <block name="STOP">
-<!--            <call_once fun="NavSetWaypointHere(WP_STDBY)"/>-->
-<!--            <stay wp="STDBY"/>-->
+            <call_once fun="NavSetWaypointHere(WP_STDBY)"/>
+            <call_once fun="setNav()"/>
+            <stay wp="STDBY"/>
         </block>
-        <block key="l" name="land here" strip_button="land here" strip_icon="land-right.png">
-<!--            <call_once fun="NavSetWaypointHere(WP_TD)"/>-->
-<!--            <go wp="TD"/>-->
-<!--            <deroute block="Flare"/>-->
+        <block key="l" name="land here" strip_button="Land Here" strip_icon="land-right.png">
+            <call_once fun="setNav()"/>
+            <call_once fun="NavSetWaypointHere(WP_TD)"/>
+            <go wp="TD"/>
+            <deroute block="Flare"/>
         </block>
         <block name="Land">
-<!--            <go wp="TD"/>-->
-<!--            <deroute block="Flare"/>-->
+            <call_once fun="setNav()"/>
+            <go wp="TD"/>
+            <deroute block="Flare"/>
         </block>
         <block name="Flare">
-<!--            <exception cond="NavDetectGround()" deroute="Holding point"/>-->
-<!--            <exception cond="!nav_is_in_flight()" deroute="Landed"/>-->
-<!--            <exception cond="0.10 @GT GetPosAlt()" deroute="Landed"/>-->
-<!--            <call_once fun="NavStartDetectGround()"/>-->
-<!--            <stay climb="nav_descend_vspeed" vmode="climb" wp="TD"/>-->
+            <exception cond="NavDetectGround()" deroute="Holding point"/>
+            <exception cond="!nav_is_in_flight()" deroute="Landed"/>
+            <exception cond="0.10 @GT GetPosAlt()" deroute="Landed"/>
+            <call_once fun="NavStartDetectGround()"/>
+            <stay climb="nav_descend_vspeed" vmode="climb" wp="TD"/>
         </block>
         <block name="Landed">
-<!--            <call_once fun="NavKillThrottle()"/>-->
-<!--            <attitude pitch="0" roll="0" throttle="0" until="FALSE" vmode="throttle"/>-->
+            <call_once fun="NavKillThrottle()"/>
+            <attitude pitch="0" roll="0" throttle="0" until="FALSE" vmode="throttle"/>
         </block>
     </blocks>
 </flight_plan>

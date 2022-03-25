@@ -19,7 +19,20 @@ void computePath(struct Navigator *self, struct DATA_MATRIX obstacleMap){
     if(LOG_UNIT_METHOD_CALLS)
         fprintf(stderr, "BasicNavigator: computePath()\n");
 
+    // Set the autopilot mode to GUIDED
+    autopilot_mode_auto2 = AP_MODE_GUIDED;
+    autopilot_static_set_mode(AP_MODE_GUIDED);
+
+    // Print the current autopilot mode
+    fprintf(stderr, "Autopilot mode: %d\n", autopilot.mode);
+
     // TODO: use the obstacleMap to compute an amazing next waypoint
+
+    // Set forward speed
+    guidance_h_set_guided_body_vel(0.5, 0);
+
+    // Set a heading
+    guidance_h_set_guided_heading(14);
 
 }
 
@@ -41,6 +54,9 @@ void start(struct Navigator *self){
     // Set the ground reference for the navigator
     NavSetGroundReferenceHere();
 
+    // Set the altitude reference to here
+    NavSetAltitudeReferenceHere();
+
 }
 
 void stop(struct Navigator *self){
@@ -52,20 +68,31 @@ void stop(struct Navigator *self){
     // Stop any kind of throttle
     NavKillThrottle();
 
+    // Set the autopilot mode back to NAV
+    autopilot_mode_auto2 = AP_MODE_NAV;
+    autopilot_set_mode(AP_MODE_NAV);
+
     // TODO: implement
 }
 
-void land(struct Navigator *self){
+void land(struct Navigator *self) {
 
     // Log status update of navigator
-    if(LOG_UNIT_METHOD_CALLS)
+    if (LOG_UNIT_METHOD_CALLS)
         fprintf(stderr, "BasicNavigator: land()\n");
 
     // Check whether the autopilot is in flight mode
-    if(autopilot_in_flight()){
+    if (autopilot_in_flight()) {
 
-        // Set current location as the waypoint to be at
-        waypoint_set_here_2d(WP_TRAJECTORY);
+        // Set the autopilot mode back to NAV
+        autopilot_mode_auto2 = AP_MODE_NAV;
+        autopilot_set_mode(AP_MODE_NAV);
+
+        // Set guidance mode
+        guidance_h_mode_changed(GUIDANCE_H_MODE_GUIDED);
+
+        // Set current location as the waypoint to be at TODO: guided?
+        NavSetWaypointHere(WP_TD);
 
         // TODO: make this more normal later, for now just turn off engines
         autopilot_set_motors_on(false);
@@ -83,18 +110,24 @@ void takeoff(struct Navigator *self){
     // Check if the autopilot is not in flight mode already
     if(!autopilot_in_flight()){
 
+        fprintf(stderr, "Start engines and takeoff\n");
+
         // Turn on motors of aircraft
         NavResurrect();
 
-        // TODO: in orange avoid, they just set the waypoint WP_CLIMB
-        waypoint_set_here_2d(WP_CLIMB);
+        // Set the climb waypoint
+//        NavSetWaypointHere(WP_CLIMB);
 
-        // Set waypoint to the autopilot
-        waypoint_move_xy_i(WP_CLIMB, 0, 0);
-        waypoint_set_alt_i(WP_CLIMB, 2);
+        NavVerticalAutoThrottleMode(0);
+        NavVerticalAltitudeMode(500, 0);
+//        NavVerticalClimbMode(50, 0);
 
-        // Log successful take off and autopilot mode
-        fprintf(stderr, "SUCCESS: Autopilot started (mode %d)\n", autopilot_get_mode());
+//        navigation_SetFlightAltitude(1);
+
+//        guidance_h_hover_enter();
+
+//        guidance_h_set_guided_pos(self->getPosition(self).x, self->getPosition(self).y);
+
 
     } else {
 
@@ -103,6 +136,21 @@ void takeoff(struct Navigator *self){
 
     }
 
+}
+
+struct POSITION getPosition(struct Navigator *self){
+
+    // Initialize a position object
+    struct POSITION currentPosition;
+
+    // Sync the data with modules position
+    currentPosition.x = stateGetPositionEnu_i()->x;
+    currentPosition.y = stateGetPositionEnu_i()->y;
+    currentPosition.alt = stateGetPositionEnu_i()->z;
+    currentPosition.heading = stateGetNedToBodyEulers_f()->psi;
+
+    // Return the position object
+    return currentPosition;
 }
 
 struct Navigator createBasicNavigator(){
@@ -117,6 +165,7 @@ struct Navigator createBasicNavigator(){
     instance.computePath = computePath;
     instance.hasError = hasError;
     instance.start = start;
+    instance.getPosition = getPosition;
     instance.stop = stop;
     instance.takeoff = takeoff;
     instance.land = land;

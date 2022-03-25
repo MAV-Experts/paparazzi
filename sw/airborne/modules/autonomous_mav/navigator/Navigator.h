@@ -6,6 +6,17 @@
 #define PAPARAZZI_NAVIGATOR_H
 
 #include "../obstacle_detector/ObstacleDetector.h"
+#include <stdint.h>
+
+/**
+ * This struct contains the exact position of the drone in space
+ */
+struct POSITION {
+    uint16_t x;
+    uint16_t y;
+    uint16_t alt;
+    uint16_t heading;
+};
 
 /**
  * The states that the Navigator can be in
@@ -29,6 +40,14 @@ struct Navigator {
      * This attribute stores the current state of the Navigator
      */
     enum NAV_STATES currentState;
+
+    /**
+     * This method returns the current position of the drone
+     *
+     * @param self reference to instance
+     * @return struct POSITION with x, y and altitude
+     */
+    struct POSITION (*getPosition)(struct Navigator *self);
 
     /**
      * Method returns the current state of the navigation unit

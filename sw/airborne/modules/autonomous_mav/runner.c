@@ -4,18 +4,24 @@
 
 #include "runner.h"
 
-float oa_color_count_frac = 0.18f;
-
 /**
  * Create a global instance of the Micro Air Vehicle instance
  */
 struct MAV mav;
+bool isRunning = false;
 
 /**
  * Create global instances of the navigator and the obstacle detector
  */
 struct Navigator nav;
 struct ObstacleDetector detector;
+
+/**
+ * This will switch the global running variable "on"
+ */
+extern void startSystem(void){
+    isRunning = true;
+}
 
 /**
  * Init function in Paparazzi loop
@@ -40,6 +46,7 @@ extern void autonomous_mav_init(void){
 extern void autonomous_mav_periodic(void){
 
     // Call the heartbeat method on the instance of the MAV
-    mav.heartbeat(&mav);
+    if(isRunning)
+        mav.heartbeat(&mav);
 
 }

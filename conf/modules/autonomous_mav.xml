@@ -24,7 +24,7 @@
         <file name="runner.h"/>
     </header>
     <init fun="autonomous_mav_init()"/>
-    <periodic fun="autonomous_mav_periodic()" freq="4"/>
+    <periodic fun="autonomous_mav_periodic()" freq="5"/>
     <makefile target="ap|nps">
         <file name="runner.c"/>
         <file name="obstacle_detector/modules/BasicDetector.c"/>
