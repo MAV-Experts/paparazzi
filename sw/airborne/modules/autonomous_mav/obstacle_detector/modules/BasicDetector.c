@@ -14,6 +14,16 @@ void init(struct ObstacleDetector *self){
     cv_add_to_device(&DETECTOR_FRONT_CAMERA, storeFrontImage, DETECTOR_FPS, 0);
     cv_add_to_device(&DETECTOR_BOTTOM_CAMERA, storeBottomImage, DETECTOR_FPS, 0);
 
+    // Initialize the data matrix with zeros
+    for(int row = 0; row < MATRIX_ROWS; row++){
+        for(int col = 0; col < MATRIX_COLS; col++){
+            self->datamatrix.data[row][col].orange = 0;
+            self->datamatrix.data[row][col].blue = 0;
+            self->datamatrix.data[row][col].green = 0;
+            self->datamatrix.data[row][col].obstacle_probability = 0;
+        }
+    }
+
 }
 
 struct image_t * storeFrontImage(struct image_t *img, uint8_t filter){

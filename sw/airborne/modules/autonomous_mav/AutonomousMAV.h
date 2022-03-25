@@ -15,10 +15,6 @@
 #ifndef PAPARAZZI_AUTONOMOUSVEHICLE_H
 #define PAPARAZZI_AUTONOMOUSVEHICLE_H
 
-// The dimensions of the matrix that detector and navigator exchange
-#define MATRIX_COLS 3
-#define MATRIX_ROWS 2
-
 // Number of system iterations until the MAV will take off and start operations
 #define MIN_SYSTEM_ITERATIONS_TILL_TAKEOFF 2
 
@@ -32,15 +28,15 @@
  * Possible states of the MAV instance
  */
 enum STATE {
-    BOOT,
-    STARTUP,
-    FATAL_ERROR,
-    TAKEOFF,
-    LANDING,
-    NORMAL_MOVEMENT,
-    EVASIVE_MOVEMENT,
-    REENTER_MOVEMENT,
-    DONE
+    BOOT,               // 0
+    STARTUP,            // 1
+    FATAL_ERROR,        // 2
+    TAKEOFF,            // 3
+    LANDING,            // 4
+    NORMAL_MOVEMENT,    // 5
+    EVASIVE_MOVEMENT,   // 6
+    REENTER_MOVEMENT,   // 7
+    DONE                // 8
 };
 
 /**

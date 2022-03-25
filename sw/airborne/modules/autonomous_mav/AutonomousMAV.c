@@ -8,16 +8,15 @@
 void heartbeat(struct MAV *self){
 
     // Variable to see whether the 10 minutes are over TODO: still needs work
-    int timerIsDone = 0;
+    bool timerIsDone = false;
 
     // Create local variable for the next state
     enum STATE nextState = self->currentState;
 
-    // TODO: remove me later (this is just for testing)
-    uint8_t wid = WP_TRAJECTORY;
-    fprintf(stderr, "AutonomousMAV: current waypoint %d is (%d, %d, %d)\n", wid, waypoint_get_x(wid), waypoint_get_y(wid), waypoint_get_alt(wid));
-    fprintf(stderr, "AutonomousMAV: autopilot in flight %d\n", autopilot.in_flight);
-    fprintf(stderr, "AutonomousMAV: autopilot motors on %d\n", autopilot.motors_on);
+//    // TODO: remove me later (this is just for testing)
+//    for(uint8_t wid = 0; wid < 14; wid++){
+//        fprintf(stderr, "AutonomousMAV: current waypoint %d is (%d, %d, %d)\n", wid, waypoint_get_x(wid), waypoint_get_y(wid), waypoint_get_alt(wid));
+//    }
 
     // Handle the state based actions and transitions
     switch (self->currentState) {
@@ -32,9 +31,6 @@ void heartbeat(struct MAV *self){
             break;
 
         case STARTUP:
-
-            // TODO: remove me later (this is just for testing)
-            fprintf(stderr, "AutonomousMAV: nav is in flight %d\n", nav_is_in_flight());
 
             // Check for transitions
             if(self->aircraftHasError(self)){
@@ -67,7 +63,7 @@ void heartbeat(struct MAV *self){
                 nextState = FATAL_ERROR;
 
             // If the autopilot is in flight mode, switch to normal maneuvers
-            if(autopilot_in_flight())
+            if(autopilot.in_flight)
                 nextState = NORMAL_MOVEMENT;
 
         case LANDING:
@@ -76,14 +72,14 @@ void heartbeat(struct MAV *self){
 
         case NORMAL_MOVEMENT:
             // Compute route
-            self->navigator->computePath(self->navigator, self->detector->getObstacleMap(self->detector));
-            // State based action in normal movement
-            if(self->aircraftHasError(self) || timerIsDone)
-                nextState = LANDING;
-            if(self->detector->obstacleAhead(self->detector))
-                nextState = EVASIVE_MOVEMENT;
-            if(self->detector->outOfArena(self->detector))
-                nextState = REENTER_MOVEMENT;
+//            self->navigator->computePath(self->navigator, self->detector->getObstacleMap(self->detector));
+//            // State based action in normal movement
+//            if(self->aircraftHasError(self) || timerIsDone)
+//                nextState = LANDING;
+//            if(self->detector->obstacleAhead(self->detector))
+//                nextState = EVASIVE_MOVEMENT;
+//            if(self->detector->outOfArena(self->detector))
+//                nextState = REENTER_MOVEMENT;
             break;
 
         case REENTER_MOVEMENT:

@@ -22,6 +22,10 @@
 #include <stdbool.h>
 #include <math.h>
 
+// The dimensions of the matrix that detector and navigator exchange
+#define MATRIX_COLS 3
+#define MATRIX_ROWS 2
+
 /**
  * A datapoint is a single part of the data matrix
  */

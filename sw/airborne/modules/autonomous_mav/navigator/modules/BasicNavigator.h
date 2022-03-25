@@ -18,7 +18,7 @@
 #define PAPARAZZI_BASICNAVIGATOR_H
 
 enum NAV_STATES getState(struct Navigator *self);
-void computePath(struct Navigator *self, int obstacleMap);
+void computePath(struct Navigator *self, struct DATA_MATRIX obstacleMap);
 int hasError(struct Navigator *self);
 void start(struct Navigator *self);
 void stop(struct Navigator *self);

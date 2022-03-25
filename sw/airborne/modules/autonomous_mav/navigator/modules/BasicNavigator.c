@@ -13,17 +13,13 @@ enum NAV_STATES getState(struct Navigator *self){
     return NAV_NORMAL;
 }
 
-void computePath(struct Navigator *self, int obstacleMap){
+void computePath(struct Navigator *self, struct DATA_MATRIX obstacleMap){
 
     // Log status update of navigator
     if(LOG_UNIT_METHOD_CALLS)
         fprintf(stderr, "BasicNavigator: computePath()\n");
 
-    // FIXME: this does not work
-    fprintf(stderr, "Current Pos: (%d, %d, %d)\n", state.ecef_pos_i.x, state.ecef_pos_i.y, state.ecef_pos_i.z);
-    fprintf(stderr, "Number of breakpoints: %d\n", nb_waypoint);
-
-    // TODO: implement
+    // TODO: use the obstacleMap to compute an amazing next waypoint
 
 }
 
@@ -94,8 +90,8 @@ void takeoff(struct Navigator *self){
         waypoint_set_here_2d(WP_CLIMB);
 
         // Set waypoint to the autopilot
-//        waypoint_move_xy_i(6, 0, 0);
-//        waypoint_set_alt_i(6, 2);
+        waypoint_move_xy_i(WP_CLIMB, 0, 0);
+        waypoint_set_alt_i(WP_CLIMB, 2);
 
         // Log successful take off and autopilot mode
         fprintf(stderr, "SUCCESS: Autopilot started (mode %d)\n", autopilot_get_mode());
@@ -128,4 +124,3 @@ struct Navigator createBasicNavigator(){
     // Return the instance to the calling unit
     return instance;
 }
-
